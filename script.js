@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameState = {
         board: [], // 5x5 棋盘
         clicksLeft: 5, // 剩余点击次数
+        maxClicks: 5, // 最大点击次数
         boardSize: 5, // 棋盘大小
         isAnimating: false, // 动画进行中标记
         cellElements: [] // 存储DOM元素引用
@@ -10,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const gameBoard = document.getElementById('game-board');
     const clicksLeftElement = document.getElementById('clicks-left');
+    const clicksProgressBar = document.getElementById('clicks-progress-bar');
     const restartButton = document.getElementById('restart-btn');
     const themeToggle = document.getElementById('theme-toggle');
 
@@ -68,15 +70,35 @@ document.addEventListener('DOMContentLoaded', () => {
             gameState.clicksLeft = savedState.clicksLeft;
         } else {
             // 否则初始化新游戏
-            gameState.clicksLeft = 5;
+            gameState.clicksLeft = gameState.maxClicks;
             initializeBoard();
         }
         
-        clicksLeftElement.textContent = gameState.clicksLeft;
+        // 更新点击次数显示和进度条
+        updateClicksDisplay();
         gameState.isAnimating = false;
         
         // 创建或更新棋盘DOM
         createBoardDOM();
+    }
+    
+    // 更新点击次数显示和进度条
+    function updateClicksDisplay() {
+        // 更新数字显示
+        clicksLeftElement.textContent = gameState.clicksLeft;
+        
+        // 更新进度条
+        const progressPercent = (gameState.clicksLeft / gameState.maxClicks) * 100;
+        clicksProgressBar.style.width = `${progressPercent}%`;
+        
+        // 根据剩余次数更改进度条颜色
+        if (progressPercent <= 20) {
+            clicksProgressBar.style.backgroundColor = '#ff5252'; // 红色
+        } else if (progressPercent <= 60) {
+            clicksProgressBar.style.backgroundColor = '#ffd740'; // 黄色
+        } else {
+            clicksProgressBar.style.backgroundColor = ''; // 使用默认颜色(变量)
+        }
     }
     
     // 保存游戏状态到localStorage
@@ -194,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 减少点击次数
         gameState.clicksLeft--;
-        clicksLeftElement.textContent = gameState.clicksLeft;
+        updateClicksDisplay();
         
         // 保存游戏状态
         saveGameState();
@@ -277,8 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateCellDisplay(targetCell.row, targetCell.col);
                     
                     // 当出现连通数>=3时，增加计数器的值，但最大为5
-                    gameState.clicksLeft = Math.min(gameState.clicksLeft + 1, 5);
-                    clicksLeftElement.textContent = gameState.clicksLeft;
+                    gameState.clicksLeft = Math.min(gameState.clicksLeft + 1, gameState.maxClicks);
+                    updateClicksDisplay();
                     
                     // 不需要等待放大动画结束，直接处理下一个连通组
                     setTimeout(() => {
