@@ -21,9 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 重新开始游戏按钮事件
     restartButton.addEventListener('click', () => {
-        // 清除存档
-        localStorage.removeItem('tapmeGameState');
-        initGame();
+        // 添加确认对话框，防止误触
+        if (confirm('确定要重新开始游戏吗？当前游戏进度将丢失。')) {
+            // 清除存档
+            localStorage.removeItem('tapmeGameState');
+            initGame();
+        }
     });
     
     // 主题切换事件
