@@ -1,0 +1,424 @@
+/* 定义亮色模式和暗色模式的颜色变量 */
+:root {
+    /* 亮色模式 */
+    --bg-color: #f4f4f4;
+    --container-bg: white;
+    --text-color: #333;
+    --heading-color: #4a4a4a;
+    --counter-color: #555;
+    --button-bg: #4caf50;
+    --button-hover-bg: #388e3c;
+    --button-text: white;
+    --cell-bg: #e0e0e0;
+    --cell-shadow: rgba(0, 0, 0, 0.1);
+    --highlight-color: #ffeb3b;
+}
+
+/* 暗色模式 */
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --container-bg: #1e1e1e;
+    --text-color: #e0e0e0;
+    --heading-color: #f0f0f0;
+    --counter-color: #b0b0b0;
+    --button-bg: #2e7d32;
+    --button-hover-bg: #1b5e20;
+    --button-text: #e0e0e0;
+    --cell-bg: #2a2a2a;
+    --cell-shadow: rgba(0, 0, 0, 0.3);
+    --highlight-color: #ffd600;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: var(--text-color);
+    overflow: hidden; /* 防止页面滚动 */
+    transition: background-color 0.3s ease;
+}
+
+.container {
+    background-color: var(--container-bg);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+}
+
+h1 {
+    color: var(--heading-color);
+    margin-bottom: 20px;
+    transition: color 0.3s ease;
+}
+
+.game-info {
+    margin-bottom: 20px;
+    font-size: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.counter {
+    font-weight: bold;
+    color: var(--counter-color);
+    transition: color 0.3s ease;
+}
+
+#clicks-left {
+    display: inline-block;
+}
+
+/* 主题切换开关样式 */
+.theme-switch {
+    display: flex;
+    align-items: center;
+}
+
+.theme-label {
+    margin-left: 10px;
+    font-size: 16px;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--button-bg);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 24px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+.game-board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    gap: 10px;
+    width: 350px;
+    height: 350px;
+    margin: 0 auto 20px;
+    position: relative; /* 为绝对定位动画元素添加相对定位 */
+}
+
+.cell {
+    background-color: var(--cell-bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.05s ease-out, background-color 0.15s ease-out;
+    box-shadow: 0 2px 5px var(--cell-shadow);
+    will-change: transform;
+}
+
+.cell:hover {
+    transform: scale(1.05);
+}
+
+.cell.empty {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.falling {
+    animation: fall 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+}
+
+.new-cell {
+    animation: appear 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform, opacity;
+}
+
+.highlight {
+    animation: pulse 0.15s ease-in-out;
+    background-color: var(--highlight-color);
+    will-change: transform;
+}
+
+.pulse {
+    animation: pulseOut 0.15s ease-in-out;
+    will-change: transform, opacity;
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-60px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes appear {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+@keyframes pulseOut {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+/* 根据数字显示不同颜色 */
+/* 移除旧的单独数字颜色定义，现在由主题样式控制 */
+/* 
+.cell[data-value="1"] {
+    background-color: #a2d2ff;
+}
+
+.cell[data-value="2"] {
+    background-color: #bde0fe;
+}
+
+.cell[data-value="3"] {
+    background-color: #ffafcc;
+}
+
+.cell[data-value="4"] {
+    background-color: #ffc8dd;
+}
+
+.cell[data-value="5"] {
+    background-color: #cdb4db;
+}
+
+.cell[data-value="6"] {
+    background-color: #98f5e1;
+}
+
+.cell[data-value="7"] {
+    background-color: #8eecf5;
+}
+
+.cell[data-value="8"] {
+    background-color: #90dbf4;
+}
+
+.cell[data-value="9"] {
+    background-color: #f08080;
+}
+
+.cell[data-value="10"] {
+    background-color: #f4a261;
+}
+*/
+
+button#restart-btn {
+    padding: 10px 20px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button#restart-btn:hover {
+    background-color: var(--button-hover-bg);
+}
+
+/* 移除调试连通组的样式 */
+/* 
+.cell.debug-group-1 {
+    border: 3px solid red;
+    z-index: 10;
+}
+
+.cell.debug-group-2 {
+    border: 3px solid green;
+    z-index: 10;
+}
+
+.cell.debug-group-3 {
+    border: 3px solid blue;
+    z-index: 10;
+}
+*/
+
+/* 亮色模式下1-20的数字颜色 */
+[data-theme="light"] .cell[data-value="1"] { background-color: #a2d2ff; }
+[data-theme="light"] .cell[data-value="2"] { background-color: #bde0fe; }
+[data-theme="light"] .cell[data-value="3"] { background-color: #ffafcc; }
+[data-theme="light"] .cell[data-value="4"] { background-color: #ffc8dd; }
+[data-theme="light"] .cell[data-value="5"] { background-color: #cdb4db; }
+[data-theme="light"] .cell[data-value="6"] { background-color: #98f5e1; }
+[data-theme="light"] .cell[data-value="7"] { background-color: #8eecf5; }
+[data-theme="light"] .cell[data-value="8"] { background-color: #90dbf4; }
+[data-theme="light"] .cell[data-value="9"] { background-color: #f08080; }
+[data-theme="light"] .cell[data-value="10"] { background-color: #f4a261; }
+[data-theme="light"] .cell[data-value="11"] { background-color: #e9c46a; }
+[data-theme="light"] .cell[data-value="12"] { background-color: #2a9d8f; }
+[data-theme="light"] .cell[data-value="13"] { background-color: #e76f51; }
+[data-theme="light"] .cell[data-value="14"] { background-color: #606c38; }
+[data-theme="light"] .cell[data-value="15"] { background-color: #dda15e; }
+[data-theme="light"] .cell[data-value="16"] { background-color: #bc6c25; }
+[data-theme="light"] .cell[data-value="17"] { background-color: #8338ec; }
+[data-theme="light"] .cell[data-value="18"] { background-color: #3a86ff; }
+[data-theme="light"] .cell[data-value="19"] { background-color: #fb8500; }
+[data-theme="light"] .cell[data-value="20"] { background-color: #ef233c; }
+
+/* 暗色模式下1-20的数字颜色 */
+[data-theme="dark"] .cell[data-value="1"] { background-color: #01295f; color: #fff; }
+[data-theme="dark"] .cell[data-value="2"] { background-color: #013a8b; color: #fff; }
+[data-theme="dark"] .cell[data-value="3"] { background-color: #5f0140; color: #fff; }
+[data-theme="dark"] .cell[data-value="4"] { background-color: #7a0158; color: #fff; }
+[data-theme="dark"] .cell[data-value="5"] { background-color: #4a0155; color: #fff; }
+[data-theme="dark"] .cell[data-value="6"] { background-color: #014d40; color: #fff; }
+[data-theme="dark"] .cell[data-value="7"] { background-color: #016064; color: #fff; }
+[data-theme="dark"] .cell[data-value="8"] { background-color: #014f86; color: #fff; }
+[data-theme="dark"] .cell[data-value="9"] { background-color: #6a040f; color: #fff; }
+[data-theme="dark"] .cell[data-value="10"] { background-color: #9c2c13; color: #fff; }
+[data-theme="dark"] .cell[data-value="11"] { background-color: #9a6a15; color: #fff; }
+[data-theme="dark"] .cell[data-value="12"] { background-color: #005f56; color: #fff; }
+[data-theme="dark"] .cell[data-value="13"] { background-color: #9c3311; color: #fff; }
+[data-theme="dark"] .cell[data-value="14"] { background-color: #283809; color: #fff; }
+[data-theme="dark"] .cell[data-value="15"] { background-color: #935a15; color: #fff; }
+[data-theme="dark"] .cell[data-value="16"] { background-color: #773e15; color: #fff; }
+[data-theme="dark"] .cell[data-value="17"] { background-color: #4715a7; color: #fff; }
+[data-theme="dark"] .cell[data-value="18"] { background-color: #0750c7; color: #fff; }
+[data-theme="dark"] .cell[data-value="19"] { background-color: #a94900; color: #fff; }
+[data-theme="dark"] .cell[data-value="20"] { background-color: #a31630; color: #fff; }
+
+/* 移动到目标位置的动画 */
+.cell-clone {
+    position: absolute;
+    z-index: 100;
+    transition-property: top, left;
+    transition-timing-function: ease-in-out;
+    transition-duration: 0.1s;
+    pointer-events: none;
+}
+
+/* 格子消失的动画 */
+@keyframes vanish {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0);
+        opacity: 0;
+    }
+}
+
+.vanish {
+    animation: vanish 0.08s ease-in-out;
+}
+
+/* 格子增大的动画 */
+@keyframes grow {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.3);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.grow {
+    animation: grow 0.12s ease-in-out;
+}
+
+/* 下落后出现的新连通组高亮效果 - 更微妙的版本 */
+.new-connected {
+    animation: newConnected 0.4s ease-in-out;
+    box-shadow: 0 0 4px rgba(255, 235, 59, 0.4);
+    z-index: 5;
+}
+
+@keyframes newConnected {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 2px rgba(255, 235, 59, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 6px rgba(255, 235, 59, 0.5);
+    }
+} 

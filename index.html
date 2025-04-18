@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TapMe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>TapMe</h1>
+        <div class="game-info">
+            <div class="counter">剩余点击次数: <span id="clicks-left">5</span></div>
+            <div class="theme-switch">
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider round"></span>
+                </label>
+                <span class="theme-label">暗黑模式</span>
+            </div>
+        </div>
+        <div class="game-board" id="game-board">
+            <!-- 棋盘将由JavaScript动态生成 -->
+        </div>
+        <button id="restart-btn">重新开始</button>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html> 
