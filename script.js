@@ -221,135 +221,127 @@ document.addEventListener('DOMContentLoaded', () => {
         if (connectedGroups.length > 0) {
             gameState.isAnimating = true;
             
-            // 处理所有连通组
-            for (const group of connectedGroups) {
-                if (group.length >= 3) {
-                    // 判断点击的格子是否在连通组中
-                    const clickedInGroup = group.some(cell => cell.row === clickedRow && cell.col === clickedCol);
-                    
-                    // 记录需要清除的格子和目标格子
-                    let cellsToClear = [];
-                    let targetCell = null;
-                    
-                    if (clickedInGroup) {
-                        // 如果点击的格子在连通组中
-                        targetCell = group.find(cell => cell.row === clickedRow && cell.col === clickedCol);
-                        cellsToClear = group.filter(cell => cell.row !== clickedRow || cell.col !== clickedCol);
-                    } else {
-                        // 选择x最大，若x相等则选y最大的格子
-                        targetCell = group[0];
-                        for (const cell of group) {
-                            if (cell.row > targetCell.row || 
-                                (cell.row === targetCell.row && cell.col < targetCell.col)) {
-                                targetCell = cell;
-                            }
-                        }
-                        cellsToClear = group.filter(cell => cell.row !== targetCell.row || cell.col !== targetCell.col);
-                    }
-                    
-                    // 获取目标格子的DOM元素和位置
-                    const targetElement = gameState.cellElements[targetCell.row][targetCell.col];
-                    const targetRect = targetElement.getBoundingClientRect();
-                    
-                    // 1. 先让消失格子移动到目标格子周围对应方向的位置
-                    let animationsCompleted = 0;
-                    
-                    // 添加50ms的初始延迟，让用户先看到所有要消除的格子
-                    setTimeout(() => {
-                        cellsToClear.forEach((cell, index) => {
-                            // 为每个格子添加交错的开始时间，不是同时开始
-                            setTimeout(() => {
-                                // 复制格子并添加到DOM中
-                                const cellElement = gameState.cellElements[cell.row][cell.col];
-                                const cellRect = cellElement.getBoundingClientRect();
-                                
-                                const clone = cellElement.cloneNode(true);
-                                clone.classList.add('cell-clone');
-                                clone.style.width = `${cellRect.width}px`;
-                                clone.style.height = `${cellRect.height}px`;
-                                clone.style.left = `${cellRect.left}px`;
-                                clone.style.top = `${cellRect.top}px`;
-                                document.body.appendChild(clone);
-                                
-                                // 计算移动路径（避开非空格子）
-                                const path = findPath(cell, targetCell);
-                                
-                                // 确定消失的目标位置（根据相对位置来定）
-                                const finalPos = calculateFinalPosition(cell, targetCell, targetRect);
-                                
-                                // 立即在原位置显示空格子
-                                gameState.board[cell.row][cell.col] = null;
-                                updateCellDisplay(cell.row, cell.col);
-                                
-                                // 如果找到路径，执行路径动画
-                                if (path && path.length > 0) {
-                                    animatePath(clone, path, finalPos, () => {
-                                        // 动画完成后移除克隆元素
-                                        document.body.removeChild(clone);
-                                        animationsCompleted++;
-                                        
-                                        // 当所有动画完成后，增加目标格子的值
-                                        if (animationsCompleted === cellsToClear.length) {
-                                            // 增加目标格子的值并应用增长动画
-                                            setTimeout(() => {
-                                                gameState.board[targetCell.row][targetCell.col]++;
-                                                updateCellDisplay(targetCell.row, targetCell.col);
-                                                targetElement.classList.add('grow');
-                                                
-                                                // 当出现连通数>=3时，增加计数器的值，但最大为5
-                                                gameState.clicksLeft = Math.min(gameState.clicksLeft + 1, 5);
-                                                clicksLeftElement.textContent = gameState.clicksLeft;
-                                                
-                                                setTimeout(() => {
-                                                    targetElement.classList.remove('grow');
-                                                    
-                                                    // 然后进行下落处理
-                                                    setTimeout(() => {
-                                                        applyGravity();
-                                                    }, 50);
-                                                }, 120);
-                                            }, 50);
-                                        }
-                                    });
-                                } else {
-                                    // 如果找不到路径，直接淡出消失
-                                    clone.classList.add('vanish');
-                                    setTimeout(() => {
-                                        document.body.removeChild(clone);
-                                        animationsCompleted++;
-                                        
-                                        // 当所有动画完成后，增加目标格子的值
-                                        if (animationsCompleted === cellsToClear.length) {
-                                            // 增加目标格子的值并应用增长动画
-                                            setTimeout(() => {
-                                                gameState.board[targetCell.row][targetCell.col]++;
-                                                updateCellDisplay(targetCell.row, targetCell.col);
-                                                targetElement.classList.add('grow');
-                                                
-                                                // 当出现连通数>=3时，增加计数器的值，但最大为5
-                                                gameState.clicksLeft = Math.min(gameState.clicksLeft + 1, 5);
-                                                clicksLeftElement.textContent = gameState.clicksLeft;
-                                                
-                                                setTimeout(() => {
-                                                    targetElement.classList.remove('grow');
-                                                    
-                                                    // 然后进行下落处理
-                                                    setTimeout(() => {
-                                                        applyGravity();
-                                                    }, 50);
-                                                }, 120);
-                                            }, 50);
-                                        }
-                                    }, 150);
-                                }
-                            }, index * 100);
-                        });
-                    }, 50);
-                }
-            }
+            // 依次处理连通组，而不是同时处理
+            processNextGroup(connectedGroups, 0, clickedRow, clickedCol);
         }
     }
     
+    // 递归处理连通组，一次处理一个
+    function processNextGroup(groups, index, clickedRow, clickedCol) {
+        if (index >= groups.length) {
+            // 所有连通组都处理完毕，进行下落
+            setTimeout(() => {
+                applyGravity();
+            }, 50);
+            return;
+        }
+        
+        const group = groups[index];
+        
+        if (group.length >= 3) {
+            // 判断点击的格子是否在连通组中
+            const clickedInGroup = group.some(cell => cell.row === clickedRow && cell.col === clickedCol);
+            
+            // 记录需要清除的格子和目标格子
+            let cellsToClear = [];
+            let targetCell = null;
+            
+            if (clickedInGroup) {
+                // 如果点击的格子在连通组中
+                targetCell = group.find(cell => cell.row === clickedRow && cell.col === clickedCol);
+                cellsToClear = group.filter(cell => cell.row !== clickedRow || cell.col !== clickedCol);
+            } else {
+                // 选择x最大，若x相等则选y最大的格子
+                targetCell = group[0];
+                for (const cell of group) {
+                    if (cell.row > targetCell.row || 
+                        (cell.row === targetCell.row && cell.col < targetCell.col)) {
+                        targetCell = cell;
+                    }
+                }
+                cellsToClear = group.filter(cell => cell.row !== targetCell.row || cell.col !== targetCell.col);
+            }
+            
+            // 获取目标格子的DOM元素和位置
+            const targetElement = gameState.cellElements[targetCell.row][targetCell.col];
+            const targetRect = targetElement.getBoundingClientRect();
+            
+            // 依次处理每个需要清除的格子
+            processCellsSequentially(cellsToClear, 0, targetCell, targetRect, () => {
+                // 所有格子消失后，增加目标格子的值
+                setTimeout(() => {
+                    gameState.board[targetCell.row][targetCell.col]++;
+                    updateCellDisplay(targetCell.row, targetCell.col);
+                    
+                    // 当出现连通数>=3时，增加计数器的值，但最大为5
+                    gameState.clicksLeft = Math.min(gameState.clicksLeft + 1, 5);
+                    clicksLeftElement.textContent = gameState.clicksLeft;
+                    
+                    // 不需要等待放大动画结束，直接处理下一个连通组
+                    setTimeout(() => {
+                        // 处理下一个连通组
+                        setTimeout(() => {
+                            processNextGroup(groups, index + 1, clickedRow, clickedCol);
+                        }, 50);
+                    }, 50); // 从120ms减少到50ms，因为不再需要等待grow动画
+                }, 50);
+            });
+        } else {
+            // 如果当前连通组不满足条件，处理下一个
+            processNextGroup(groups, index + 1, clickedRow, clickedCol);
+        }
+    }
+    
+    // 递归处理格子，一次处理一个
+    function processCellsSequentially(cells, index, targetCell, targetRect, onComplete) {
+        if (index >= cells.length) {
+            // 所有格子都处理完毕
+            onComplete();
+            return;
+        }
+        
+        const cell = cells[index];
+        const cellElement = gameState.cellElements[cell.row][cell.col];
+        const cellRect = cellElement.getBoundingClientRect();
+        
+        const clone = cellElement.cloneNode(true);
+        clone.classList.add('cell-clone');
+        clone.style.width = `${cellRect.width}px`;
+        clone.style.height = `${cellRect.height}px`;
+        clone.style.left = `${cellRect.left}px`;
+        clone.style.top = `${cellRect.top}px`;
+        document.body.appendChild(clone);
+        
+        // 计算移动路径
+        const path = findPath(cell, targetCell);
+        
+        // 确定消失的目标位置
+        const finalPos = calculateFinalPosition(cell, targetCell, targetRect);
+        
+        // 立即在原位置显示空格子
+        gameState.board[cell.row][cell.col] = null;
+        updateCellDisplay(cell.row, cell.col);
+        
+        if (path && path.length > 0) {
+            animatePath(clone, path, finalPos, () => {
+                document.body.removeChild(clone);
+                // 处理下一个格子，延迟50ms，创造依次消失的效果
+                setTimeout(() => {
+                    processCellsSequentially(cells, index + 1, targetCell, targetRect, onComplete);
+                }, 50);
+            });
+        } else {
+            clone.classList.add('vanish');
+            setTimeout(() => {
+                document.body.removeChild(clone);
+                // 处理下一个格子
+                setTimeout(() => {
+                    processCellsSequentially(cells, index + 1, targetCell, targetRect, onComplete);
+                }, 50);
+            }, 80);
+        }
+    }
+
     // 根据格子与目标格子的相对位置计算最终消失位置
     function calculateFinalPosition(cell, targetCell, targetRect) {
         // 计算偏移量
@@ -567,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     el.classList.remove('new-connected');
                 });
                 
-                // 处理第一个连通组，传入-1,-1表示非点击触发
+                // 依次处理连通组
                 processConnectedGroups(-1, -1);
             }, 400);
         } else {
