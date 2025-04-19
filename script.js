@@ -6,7 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
         maxClicks: 5, // 最大点击次数
         boardSize: 5, // 棋盘大小
         isAnimating: false, // 动画进行中标记
-        cellElements: [] // 存储DOM元素引用
+        cellElements: [], // 存储DOM元素引用
+        score: 0, // 积分
+        maxNumberInGame: 1 // 本局游戏中的最大数字
     };
 
     const gameBoard = document.getElementById('game-board');
@@ -14,6 +16,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const clicksProgressBar = document.getElementById('clicks-progress-bar');
     const restartButton = document.getElementById('restart-btn');
     const themeToggle = document.getElementById('theme-toggle');
+    const scoreElement = document.createElement('div');
+    scoreElement.classList.add('score-display');
+    scoreElement.textContent = '积分: 0';
+    document.querySelector('.game-info').appendChild(scoreElement);
+
+    // 创建历史记录显示元素
+    const recordsElement = document.createElement('div');
+    recordsElement.classList.add('records-display');
+    
+    // 将记录元素添加到TapMe标题之前
+    const container = document.querySelector('.container');
+    const title = document.querySelector('h1');
+    container.insertBefore(recordsElement, title);
+    
+    // 创建包含记录和主题切换的顶部容器
+    const topContainer = document.createElement('div');
+    topContainer.classList.add('top-container');
+    container.insertBefore(topContainer, title);
+    
+    // 将记录元素移动到顶部容器
+    topContainer.appendChild(recordsElement);
+    
+    // 将主题切换从当前位置移除并添加到顶部容器
+    const themeSwitch = document.querySelector('.theme-switch');
+    document.querySelector('.game-info').removeChild(themeSwitch);
+    topContainer.appendChild(themeSwitch);
 
     // 初始化主题
     initTheme();
@@ -68,14 +96,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // 如果有已保存的状态，加载它
             gameState.board = savedState.board;
             gameState.clicksLeft = savedState.clicksLeft;
+            gameState.score = savedState.score || 0; // 兼容旧存档
+            gameState.maxNumberInGame = savedState.maxNumberInGame || 1; // 兼容旧存档
         } else {
             // 否则初始化新游戏
             gameState.clicksLeft = gameState.maxClicks;
+            gameState.score = 0;
+            gameState.maxNumberInGame = 1;
             initializeBoard();
         }
         
         // 更新点击次数显示和进度条
         updateClicksDisplay();
+        updateScoreDisplay();
+        updateRecordsDisplay();
         gameState.isAnimating = false;
         
         // 创建或更新棋盘DOM
@@ -101,11 +135,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // 更新积分显示
+    function updateScoreDisplay() {
+        scoreElement.textContent = `积分: ${gameState.score}`;
+    }
+    
+    // 更新历史记录显示
+    function updateRecordsDisplay() {
+        const highestNumber = localStorage.getItem('tapmeHighestNumber') || 1;
+        const highestScore = localStorage.getItem('tapmeHighestScore') || 0;
+        
+        recordsElement.innerHTML = `
+            <div>最高数字: ${highestNumber}</div>
+            <div>最高积分: ${highestScore}</div>
+        `;
+    }
+    
     // 保存游戏状态到localStorage
     function saveGameState() {
         const stateToSave = {
             board: gameState.board,
-            clicksLeft: gameState.clicksLeft
+            clicksLeft: gameState.clicksLeft,
+            score: gameState.score,
+            maxNumberInGame: gameState.maxNumberInGame
         };
         localStorage.setItem('tapmeGameState', JSON.stringify(stateToSave));
     }
@@ -208,6 +260,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const newValue = oldValue + 1;
         gameState.board[row][col] = newValue;
         
+        // 更新本局游戏中的最大数字
+        if (newValue > gameState.maxNumberInGame) {
+            gameState.maxNumberInGame = newValue;
+        }
+        
         // 直接更新DOM元素，避免重新渲染
         const cellElement = gameState.cellElements[row][col];
         cellElement.textContent = newValue;
@@ -240,6 +297,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         // 动画完成后，检查剩余点击次数
                         if (gameState.clicksLeft <= 0) {
                             // 如果仍然为0，才真正结束游戏
+                            // 更新历史记录
+                            checkGameEndAndUpdateRecords();
+                            
                             alert('游戏结束！');
                             // 清除存档
                             localStorage.removeItem('tapmeGameState');
@@ -309,11 +369,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetElement = gameState.cellElements[targetCell.row][targetCell.col];
             const targetRect = targetElement.getBoundingClientRect();
             
+            // 计算增加的积分
+            const baseValue = gameState.board[targetCell.row][targetCell.col];
+            const scoreIncrease = baseValue * cellsToClear.length;
+            
+            // 创建并显示得分动画
+            const scorePopup = document.createElement('div');
+            scorePopup.classList.add('score-popup');
+            scorePopup.textContent = `+${scoreIncrease}`;
+            scorePopup.style.left = `${targetRect.left}px`;
+            scorePopup.style.top = `${targetRect.top - 30}px`;
+            document.body.appendChild(scorePopup);
+            
+            setTimeout(() => {
+                scorePopup.classList.add('fade-up');
+                setTimeout(() => {
+                    document.body.removeChild(scorePopup);
+                }, 1000);
+            }, 10);
+            
+            // 增加积分
+            gameState.score += scoreIncrease;
+            updateScoreDisplay();
+            
             // 依次处理每个需要清除的格子
             processCellsSequentially(cellsToClear, 0, targetCell, targetRect, () => {
                 // 所有格子消失后，增加目标格子的值
                 setTimeout(() => {
                     gameState.board[targetCell.row][targetCell.col]++;
+                    
+                    // 更新本局游戏中的最大数字
+                    if (gameState.board[targetCell.row][targetCell.col] > gameState.maxNumberInGame) {
+                        gameState.maxNumberInGame = gameState.board[targetCell.row][targetCell.col];
+                    }
+                    
                     updateCellDisplay(targetCell.row, targetCell.col);
                     
                     // 当出现连通数>=3时，增加计数器的值，但最大为5
@@ -711,5 +800,45 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 开始执行动画
         setTimeout(nextStep, 5); // 从10ms减半
+    }
+
+    // 检查游戏是否结束并更新记录
+    function checkGameEndAndUpdateRecords() {
+        // 获取历史记录
+        const highestNumber = parseInt(localStorage.getItem('tapmeHighestNumber') || 1);
+        const highestScore = parseInt(localStorage.getItem('tapmeHighestScore') || 0);
+        
+        // 检查并更新最高数字记录
+        if (gameState.maxNumberInGame > highestNumber) {
+            localStorage.setItem('tapmeHighestNumber', gameState.maxNumberInGame);
+            showNewRecordMessage('新的最高数字记录！');
+        }
+        
+        // 检查并更新最高分记录
+        if (gameState.score > highestScore) {
+            localStorage.setItem('tapmeHighestScore', gameState.score);
+            showNewRecordMessage('新的最高积分记录！');
+        }
+        
+        // 更新显示
+        updateRecordsDisplay();
+    }
+    
+    // 显示新记录消息
+    function showNewRecordMessage(message) {
+        const recordPopup = document.createElement('div');
+        recordPopup.classList.add('record-popup');
+        recordPopup.textContent = message;
+        document.body.appendChild(recordPopup);
+        
+        setTimeout(() => {
+            recordPopup.classList.add('show');
+            setTimeout(() => {
+                recordPopup.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(recordPopup);
+                }, 500);
+            }, 2000);
+        }, 10);
     }
 }); 

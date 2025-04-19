@@ -80,16 +80,47 @@ h1 {
     display: inline-block;
 }
 
+/* 顶部容器 */
+.top-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+/* 积分和记录显示 */
+.score-display {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 10px;
+    color: var(--text-color);
+    text-align: right;
+}
+
+.records-display {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    text-align: left;
+    color: var(--counter-color);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 0;
+}
+
 /* 主题切换开关样式 */
 .theme-switch {
     display: flex;
     align-items: center;
+    margin-top: 2px;
 }
 
 .theme-label {
     margin-left: 10px;
-    font-size: 16px;
-    color: var(--text-color);
+    font-size: 0.9rem;
+    color: var(--counter-color);
+    opacity: 0.7;
     transition: color 0.3s ease;
 }
 
@@ -434,4 +465,53 @@ button#restart-btn:hover {
     background-color: var(--button-bg);
     border-radius: 5px;
     transition: width 0.3s ease;
+}
+
+/* 积分弹出动画 */
+.score-popup {
+    position: absolute;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #4caf50;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 1;
+    transition: all 1s ease-out;
+}
+
+.score-popup.fade-up {
+    transform: translateY(-50px);
+    opacity: 0;
+}
+
+/* 新记录提示 */
+.record-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    background-color: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    z-index: 300;
+    opacity: 0;
+    transition: all 0.3s ease-out;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.record-popup.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+/* 在暗黑模式下调整显示 */
+[data-theme="dark"] .score-popup {
+    color: #81c784;
+}
+
+[data-theme="dark"] .record-popup {
+    background-color: rgba(46, 125, 50, 0.9);
 } 
