@@ -8,7 +8,9 @@ document.addEventListener('DOMContentLoaded', () => {
         isAnimating: false, // 动画进行中标记
         cellElements: [], // 存储DOM元素引用
         score: 0, // 积分
-        maxNumberInGame: 1 // 本局游戏中的最大数字
+        maxNumberInGame: 1, // 本局游戏中的最大数字
+        isNewNumberRecord: false,
+        isNewScoreRecord: false
     };
 
     const gameBoard = document.getElementById('game-board');
@@ -51,12 +53,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 重新开始游戏按钮事件
     restartButton.addEventListener('click', () => {
-        // 添加确认对话框，防止误触
-        if (confirm('确定要重新开始游戏吗？当前游戏进度将丢失。')) {
-            // 清除存档
+        // 显示自定义确认弹窗，而不是使用confirm
+        showConfirmModal('确定要重新开始游戏吗？', '当前游戏进度将丢失。', () => {
+            // 确认后执行
             localStorage.removeItem('tapmeGameState');
             initGame();
-        }
+        });
     });
     
     // 主题切换事件
@@ -114,6 +116,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 创建或更新棋盘DOM
         createBoardDOM();
+        
+        // 移除任何可能存在的游戏结束弹框
+        const existingModal = document.getElementById('game-end-modal');
+        if (existingModal) {
+            document.body.removeChild(existingModal);
+        }
     }
     
     // 更新点击次数显示和进度条
@@ -300,7 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             // 更新历史记录
                             checkGameEndAndUpdateRecords();
                             
-                            alert('游戏结束！');
+                            // 显示自定义游戏结束弹框，而不是使用alert
+                            showGameEndModal();
+                            
                             // 清除存档
                             localStorage.removeItem('tapmeGameState');
                         } else {
@@ -803,14 +813,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const highestNumber = parseInt(localStorage.getItem('tapmeHighestNumber') || 1);
         const highestScore = parseInt(localStorage.getItem('tapmeHighestScore') || 0);
         
+        // 保存破纪录状态供游戏结束弹框使用
+        gameState.isNewNumberRecord = gameState.maxNumberInGame > highestNumber;
+        gameState.isNewScoreRecord = gameState.score > highestScore;
+        
         // 检查并更新最高数字记录
-        if (gameState.maxNumberInGame > highestNumber) {
+        if (gameState.isNewNumberRecord) {
             localStorage.setItem('tapmeHighestNumber', gameState.maxNumberInGame);
             showNewRecordMessage('新的最高数字记录！');
         }
         
         // 检查并更新最高分记录
-        if (gameState.score > highestScore) {
+        if (gameState.isNewScoreRecord) {
             localStorage.setItem('tapmeHighestScore', gameState.score);
             showNewRecordMessage('新的最高积分记录！');
         }
@@ -834,6 +848,94 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.body.removeChild(recordPopup);
                 }, 500);
             }, 2000);
+        }, 10);
+    }
+
+    // 显示游戏结束弹框
+    function showGameEndModal() {
+        // 创建弹框
+        const modal = document.createElement('div');
+        modal.id = 'game-end-modal';
+        modal.className = 'game-modal';
+        
+        // 设置弹框内容
+        let message = '<h2>游戏结束</h2>';
+        
+        // 添加游戏结果
+        message += `<div class="game-results">
+            <p>本局得分: <span class="highlight-text">${gameState.score}</span></p>
+            <p>最大数字: <span class="highlight-text">${gameState.maxNumberInGame}</span></p>
+        </div>`;
+        
+        // 如果破纪录，添加恭喜信息
+        if (gameState.isNewNumberRecord || gameState.isNewScoreRecord) {
+            message += '<div class="congrats">恭喜你打破记录！</div>';
+            
+            if (gameState.isNewNumberRecord) {
+                message += `<p>新的最高数字: <span class="record-text">${gameState.maxNumberInGame}</span></p>`;
+            }
+            
+            if (gameState.isNewScoreRecord) {
+                message += `<p>新的最高分数: <span class="record-text">${gameState.score}</span></p>`;
+            }
+        }
+        
+        // 添加按钮
+        message += '<div class="modal-buttons">'+
+            '<button id="modal-restart-btn" class="modal-btn primary-btn">重新开始</button>'+
+        '</div>';
+        
+        modal.innerHTML = message;
+        document.body.appendChild(modal);
+        
+        // 添加按钮事件监听
+        setTimeout(() => {
+            document.getElementById('modal-restart-btn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                localStorage.removeItem('tapmeGameState');
+                initGame();
+            });
+            
+            // 添加类以触发显示动画
+            modal.classList.add('show');
+        }, 10);
+    }
+
+    // 显示确认弹框
+    function showConfirmModal(title, message, onConfirm) {
+        // 创建弹框
+        const modal = document.createElement('div');
+        modal.id = 'confirm-modal';
+        modal.className = 'game-modal';
+        
+        // 设置弹框内容
+        const content = `
+            <h2>${title}</h2>
+            <div class="modal-message">${message}</div>
+            <div class="modal-buttons">
+                <button id="modal-cancel-btn" class="modal-btn">取消</button>
+                <button id="modal-confirm-btn" class="modal-btn primary-btn">确定</button>
+            </div>
+        `;
+        
+        modal.innerHTML = content;
+        document.body.appendChild(modal);
+        
+        // 添加按钮事件监听
+        setTimeout(() => {
+            document.getElementById('modal-cancel-btn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                if (typeof onConfirm === 'function') {
+                    onConfirm();
+                }
+            });
+            
+            // 添加类以触发显示动画
+            modal.classList.add('show');
         }, 10);
     }
 }); 
