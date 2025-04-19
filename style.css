@@ -215,8 +215,9 @@ input:checked + .slider:before {
 }
 
 .new-cell {
-    animation: appear 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    will-change: transform, opacity;
+    /* 移除动画效果，改为平滑过渡 */
+    transition: opacity 0.25s ease-in;
+    opacity: 1;
 }
 
 .highlight {
@@ -241,12 +242,9 @@ input:checked + .slider:before {
     }
 }
 
+/* 修改appear动画为空，但保留以避免引用错误 */
 @keyframes appear {
-    0% {
-        transform: scale(0);
-        opacity: 0;
-    }
-    100% {
+    0%, 100% {
         transform: scale(1);
         opacity: 1;
     }

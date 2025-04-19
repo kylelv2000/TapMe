@@ -645,15 +645,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             newCells.forEach(newCell => {
-                setTimeout(() => {
-                    const cell = gameState.cellElements[newCell.row][newCell.col];
-                    cell.classList.add('new-cell');
-                    updateCellDisplay(newCell.row, newCell.col);
-                    
-                    setTimeout(() => {
-                        cell.classList.remove('new-cell');
-                    }, 250);
-                }, 250);
+                // 移除延迟和闪烁效果，直接更新格子显示
+                const cell = gameState.cellElements[newCell.row][newCell.col];
+                // 不添加new-cell类，避免闪烁
+                updateCellDisplay(newCell.row, newCell.col);
             });
             
             setTimeout(() => {
