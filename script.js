@@ -230,11 +230,29 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 检查游戏是否结束
             if (gameState.clicksLeft <= 0) {
-                setTimeout(() => {
-                    alert('游戏结束！');
-                    // 清除存档
-                    localStorage.removeItem('tapmeGameState');
-                }, 250);
+                // 不立即结束游戏，而是等待所有连通组和下落处理完成
+                // 创建一个等待函数来检查动画是否完成
+                function checkAnimationStatus() {
+                    if (gameState.isAnimating) {
+                        // 如果仍在动画中，继续等待
+                        setTimeout(checkAnimationStatus, 300);
+                    } else {
+                        // 动画完成后，检查剩余点击次数
+                        if (gameState.clicksLeft <= 0) {
+                            // 如果仍然为0，才真正结束游戏
+                            alert('游戏结束！');
+                            // 清除存档
+                            localStorage.removeItem('tapmeGameState');
+                        } else {
+                            // 否则继续游戏
+                            console.log('连锁反应增加了点击次数，游戏继续！');
+                            // 保存游戏状态
+                            saveGameState();
+                        }
+                    }
+                }
+                // 开始检查
+                setTimeout(checkAnimationStatus, 300);
             }
         }, 150);
     }
