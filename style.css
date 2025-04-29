@@ -106,7 +106,7 @@ body {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: var(--counter-color);
+    background: linear-gradient(145deg, var(--counter-color), rgba(85, 85, 85, 0.8));
     color: white;
     border: none;
     font-weight: bold;
@@ -115,14 +115,33 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: all 0.2s ease;
-    opacity: 0.7;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    opacity: 0.8;
+    overflow: hidden;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.icon-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+}
+
+.icon-btn:hover::before {
+    left: 100%;
 }
 
 .icon-btn:hover {
     opacity: 1;
-    transform: scale(1.05);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 h1 {
@@ -403,45 +422,71 @@ input:checked + .slider:before {
 .primary-btn, .hint-btn, .special-btn {
     padding: 12px 20px;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition: all 0.3s ease;
     color: var(--button-text);
     flex: 1;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     display: flex;
     justify-content: center;
     align-items: center;
+    opacity: 0.9;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.primary-btn::before, .hint-btn::before, .special-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+}
+
+.primary-btn:hover::before, .hint-btn:hover::before, .special-btn:hover::before {
+    left: 100%;
 }
 
 .primary-btn:hover, .hint-btn:hover, .special-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    opacity: 1;
 }
 
 .primary-btn:active, .hint-btn:active, .special-btn:active {
     transform: translateY(1px);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* 主要按钮（重新开始）样式 */
 .primary-btn {
-    background-color: var(--button-bg);
+    background: linear-gradient(145deg, var(--button-bg), var(--button-hover-bg));
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .primary-btn:hover {
-    background-color: var(--button-hover-bg);
+    background: linear-gradient(145deg, var(--button-hover-bg), var(--button-bg));
 }
 
 /* 提示按钮样式 */
 .hint-btn {
-    background-color: var(--hint-button-bg);
+    background: linear-gradient(145deg, var(--hint-button-bg), var(--hint-button-hover-bg));
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .hint-btn:hover {
-    background-color: var(--hint-button-hover-bg);
+    background: linear-gradient(145deg, var(--hint-button-hover-bg), var(--hint-button-bg));
 }
 
 /* 特殊按钮样式 */
@@ -451,38 +496,50 @@ input:checked + .slider:before {
     display: flex;
     align-items: center;
     justify-content: center;
+    text-transform: none;
+    letter-spacing: 0.3px;
 }
 
 /* 高级提示按钮 */
 .hint-special {
-    background-color: var(--advanced-hint-button-bg);
+    background: linear-gradient(145deg, var(--advanced-hint-button-bg), var(--advanced-hint-button-hover-bg));
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .hint-special:hover {
-    background-color: var(--advanced-hint-button-hover-bg);
+    background: linear-gradient(145deg, var(--advanced-hint-button-hover-bg), var(--advanced-hint-button-bg));
 }
 
 /* 打乱按钮 */
 .shuffle-special {
-    background-color: var(--shuffle-button-bg);
+    background: linear-gradient(145deg, var(--shuffle-button-bg), var(--shuffle-button-hover-bg));
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .shuffle-special:hover {
-    background-color: var(--shuffle-button-hover-bg);
+    background: linear-gradient(145deg, var(--shuffle-button-hover-bg), var(--shuffle-button-bg));
 }
 
 /* 禁用状态 */
 .special-btn.disabled, .special-btn[disabled] {
-    background-color: #cccccc;
+    background: linear-gradient(145deg, #cccccc, #a0a0a0);
     color: #666666;
     cursor: not-allowed;
     box-shadow: none;
     opacity: 0.7;
+    border: none;
 }
 
 .special-btn.disabled:hover, .special-btn[disabled]:hover {
     transform: none;
     box-shadow: none;
+    opacity: 0.7;
+}
+
+.special-btn.disabled::before, .special-btn[disabled]::before {
+    display: none;
 }
 
 /* 响应式调整 */
@@ -531,6 +588,8 @@ input:checked + .slider:before {
         display: flex;
         justify-content: center;
         align-items: center;
+        border-radius: 8px;
+        letter-spacing: 0.3px;
     }
     
     .icon-btn {
@@ -599,6 +658,8 @@ input:checked + .slider:before {
         display: flex;
         justify-content: center;
         align-items: center;
+        letter-spacing: 0;
+        text-transform: none;
     }
     
     .logo {
@@ -640,6 +701,9 @@ input:checked + .slider:before {
         display: flex;
         justify-content: center;
         align-items: center;
+        letter-spacing: 0;
+        text-transform: none;
+        border-radius: 6px;
     }
     
     .progress-bar-container {
@@ -687,6 +751,8 @@ input:checked + .slider:before {
         display: flex;
         justify-content: center;
         align-items: center;
+        letter-spacing: 0;
+        text-transform: none;
     }
 }
 
@@ -1262,21 +1328,42 @@ input:checked + .slider:before {
 }
 
 button.reset-btn {
-    background-color: #ff7043 !important;
+    background: linear-gradient(145deg, #ff7043, #e64a19) !important;
     margin-top: 5px;
     font-size: 14px !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+button.reset-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+}
+
+button.reset-btn:hover::before {
+    left: 100%;
 }
 
 button.reset-btn:hover {
-    background-color: #e64a19 !important;
+    background: linear-gradient(145deg, #e64a19, #ff7043) !important;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 [data-theme="dark"] button.reset-btn {
-    background-color: #e64a19 !important;
+    background: linear-gradient(145deg, #e64a19, #bf360c) !important;
 }
 
 [data-theme="dark"] button.reset-btn:hover {
-    background-color: #bf360c !important;
+    background: linear-gradient(145deg, #bf360c, #e64a19) !important;
 }
 
 .tutorial-modal .modal-buttons {
@@ -1287,18 +1374,38 @@ button.reset-btn:hover {
     padding: 12px 40px;
     font-size: 1.1rem;
     border-radius: 10px;
-    background-color: var(--button-bg);
+    background: linear-gradient(145deg, var(--button-bg), var(--button-hover-bg));
     color: white;
     font-weight: 600;
     letter-spacing: 1px;
     transition: all 0.3s ease;
     white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    text-transform: uppercase;
+}
+
+.tutorial-modal .modal-btn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.5s ease;
+}
+
+.tutorial-modal .modal-btn:hover::before {
+    left: 100%;
 }
 
 .tutorial-modal .modal-btn:hover {
-    transform: scale(1.05);
-    background-color: var(--button-hover-bg);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transform: translateY(-3px) scale(1.02);
+    background: linear-gradient(145deg, var(--button-hover-bg), var(--button-bg));
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .tutorial-modal.show {
