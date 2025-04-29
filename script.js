@@ -1053,8 +1053,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <li>每次最高有<strong>5个行动点数</strong></li>
                         <li>每次实现消除可以<strong>恢复1个行动点数</strong></li>
                         <li>尝试创造出最大的数字并获得最高分</li>
-                        <li><strong>高级提示</strong>可以显示最佳组合方案，每局游戏有3次机会</li>
-                        <li><strong>打乱</strong>可以重新排列所有方块，每局游戏有1次机会</li>
+                        <li><strong>高级提示</strong>可以显示最佳组合方案</li>
+                        <li><strong>打乱</strong>可以重新排列所有方块</li>
                     </ul>
                 </div>
             </div>
