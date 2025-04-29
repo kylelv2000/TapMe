@@ -58,16 +58,12 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    height: 100%;
     color: var(--text-color);
     margin: 0;
     padding: 0;
     transition: background-color 0.3s ease;
-    position: fixed;
+    overflow-x: hidden;
     width: 100%;
-    top: 0;
-    left: 0;
-    overflow: auto;
 }
 
 .container {
@@ -80,7 +76,7 @@ body {
     width: 100%;
     max-width: 500px;
     box-sizing: border-box;
-    margin: auto;
+    margin: 10px auto;
 }
 
 /* Logo 样式 */
@@ -414,6 +410,9 @@ input:checked + .slider:before {
     color: var(--button-text);
     flex: 1;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .primary-btn:hover, .hint-btn:hover, .special-btn:hover {
@@ -488,11 +487,9 @@ input:checked + .slider:before {
 /* 响应式调整 */
 @media (max-width: 480px) {
     body {
-        padding: 0;
-        overflow: auto;
-        position: relative;
-        height: auto;
+        align-items: flex-start;
         min-height: 100vh;
+        height: auto;
     }
     
     .container {
@@ -500,7 +497,6 @@ input:checked + .slider:before {
         border-radius: 0;
         box-shadow: none;
         margin: 0;
-        height: auto;
         min-height: 100vh;
     }
     
@@ -508,9 +504,14 @@ input:checked + .slider:before {
         width: 100%;
         height: auto;
         aspect-ratio: 1/1;
-        max-width: 350px;
-        max-height: 350px;
+        max-width: 300px;
+        max-height: 300px;
         margin: 10px auto;
+        gap: 6px;
+    }
+    
+    .cell {
+        font-size: 20px;
     }
     
     .main-controls, .special-controls {
@@ -525,6 +526,9 @@ input:checked + .slider:before {
         padding: 10px 5px;
         font-size: 14px;
         flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
     .icon-btn {
@@ -590,6 +594,9 @@ input:checked + .slider:before {
     .primary-btn, .hint-btn, .special-btn {
         padding: 8px 5px;
         font-size: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
     .logo {
@@ -619,9 +626,18 @@ input:checked + .slider:before {
         font-size: 16px;
     }
     
+    .game-board {
+        gap: 4px;
+        max-width: 260px;
+        max-height: 260px;
+    }
+    
     .primary-btn, .hint-btn, .special-btn {
         font-size: 11px;
         padding: 6px 2px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
     .progress-bar-container {
@@ -666,6 +682,9 @@ input:checked + .slider:before {
     
     .primary-btn, .hint-btn, .special-btn {
         padding: 5px 2px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
 }
 
@@ -816,11 +835,13 @@ input:checked + .slider:before {
     border-radius: 8px;
     font-size: 1.4rem;
     font-weight: bold;
-    z-index: 300;
+    z-index: 1500;
     opacity: 0;
     transition: all 0.3s ease-out;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     text-align: center;
+    max-width: 80%;
+    box-sizing: border-box;
 }
 
 .record-popup.show {
@@ -851,6 +872,9 @@ input:checked + .slider:before {
     z-index: 1000;
     opacity: 0;
     transition: opacity 0.3s ease;
+    overflow-y: auto;
+    padding: 20px 0;
+    box-sizing: border-box;
 }
 
 .game-modal.show {
@@ -869,6 +893,7 @@ input:checked + .slider:before {
     align-items: center;
     position: relative;
     z-index: 1;
+    margin: auto;
 }
 
 .game-modal:not(.tutorial-modal)::before {
@@ -1000,16 +1025,16 @@ input:checked + .slider:before {
 .tutorial-modal {
     max-width: 100%;
     width: 100%;
-    max-height: 100vh;
-    height: 100vh;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
-    padding: 0;
+    overflow-y: auto;
+    padding: 20px 0;
     margin: 0;
     gap: 20px;
+    box-sizing: border-box;
 }
 
 .tutorial-content {
@@ -1019,11 +1044,12 @@ input:checked + .slider:before {
     padding: 20px;
     width: 90%;
     max-width: 600px;
-    margin-bottom: 20px;
+    margin: 0 auto 20px;
     display: flex;
     flex-direction: column;
     gap: 15px;
     text-align: left;
+    box-sizing: border-box;
 }
 
 .tutorial-section {
@@ -1156,12 +1182,13 @@ input:checked + .slider:before {
 /* 移动设备适配 */
 @media (max-width: 480px) {
     .tutorial-modal {
-        padding: 0 15px;
+        padding: 10px;
     }
     
     .tutorial-content {
         padding: 15px;
         max-width: 90%;
+        margin-bottom: 10px;
     }
     
     .demo-board {
@@ -1172,6 +1199,53 @@ input:checked + .slider:before {
         width: 50px;
         height: 50px;
         font-size: 20px;
+    }
+    
+    .tutorial-modal .modal-btn {
+        padding: 10px 25px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-height: 568px) {
+    .tutorial-modal {
+        padding: 5px;
+    }
+    
+    .tutorial-content {
+        padding: 10px;
+    }
+    
+    .tutorial-section h3 {
+        margin-bottom: 5px;
+        font-size: 1rem;
+    }
+    
+    .tutorial-section ul {
+        font-size: 0.9rem;
+        padding-left: 15px;
+        line-height: 1.4;
+    }
+    
+    .demo-board {
+        width: 150px;
+        gap: 6px;
+    }
+    
+    .demo-cell {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+    
+    .demo-explanation {
+        font-size: 0.9rem;
+        margin-top: 8px;
+    }
+    
+    .tutorial-modal .modal-btn {
+        padding: 8px 20px;
+        font-size: 0.9rem;
     }
 }
 
@@ -1247,10 +1321,12 @@ button.reset-btn:hover {
     padding: 15px 20px;
     border-radius: 8px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
+    z-index: 1500;
     font-size: 16px;
     animation: fadeIn 0.3s ease-in;
     text-align: center;
+    max-width: 80%;
+    box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -1260,28 +1336,21 @@ button.reset-btn:hover {
 
 /* 确保提示按钮与其他按钮样式一致 */
 button#hint-btn {
-    background-color: #e0e0e0;
-    color: #333;
-    border: none;
-    border-radius: 5px;
-    padding: 8px 15px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    margin: 0 5px;
+    background-color: var(--hint-button-bg);
+    color: var(--button-text);
 }
 
 button#hint-btn:hover {
-    background-color: #d0d0d0;
+    background-color: var(--hint-button-hover-bg);
 }
 
 [data-theme="dark"] button#hint-btn {
-    background-color: #444;
-    color: #e0e0e0;
+    background-color: var(--hint-button-bg);
+    color: var(--button-text);
 }
 
 [data-theme="dark"] button#hint-btn:hover {
-    background-color: #555;
+    background-color: var(--hint-button-hover-bg);
 }
 
 /* 增强高级提示的格子样式 */
@@ -1296,4 +1365,16 @@ button#hint-btn:hover {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
+}
+
+@media (max-width: 480px) {
+    .record-popup {
+        font-size: 1.1rem;
+        padding: 12px 20px;
+    }
+    
+    .no-hint-message {
+        font-size: 14px;
+        padding: 12px 15px;
+    }
 } 
