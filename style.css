@@ -57,10 +57,17 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    height: 100%;
     color: var(--text-color);
-    overflow: hidden; /* 防止页面滚动 */
+    margin: 0;
+    padding: 0;
     transition: background-color 0.3s ease;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    overflow: auto;
 }
 
 .container {
@@ -70,6 +77,10 @@ body {
     padding: 20px;
     text-align: center;
     transition: background-color 0.3s ease;
+    width: 100%;
+    max-width: 500px;
+    box-sizing: border-box;
+    margin: auto;
 }
 
 /* Logo 样式 */
@@ -476,21 +487,185 @@ input:checked + .slider:before {
 
 /* 响应式调整 */
 @media (max-width: 480px) {
+    body {
+        padding: 0;
+        overflow: auto;
+        position: relative;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .container {
+        padding: 10px;
+        border-radius: 0;
+        box-shadow: none;
+        margin: 0;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .game-board {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1/1;
+        max-width: 350px;
+        max-height: 350px;
+        margin: 10px auto;
+    }
+    
     .main-controls, .special-controls {
-        flex-direction: column;
-        gap: 10px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
     }
     
     .primary-btn, .hint-btn, .special-btn {
-        width: 100%;
-        padding: 10px 15px;
+        width: calc(50% - 4px);
+        padding: 10px 5px;
         font-size: 14px;
+        flex: 0 0 auto;
     }
     
     .icon-btn {
         width: 28px;
         height: 28px;
         font-size: 16px;
+    }
+    
+    .score-display {
+        font-size: 1rem;
+    }
+    
+    .records-display {
+        font-size: 0.8rem;
+    }
+    
+    .counter-label {
+        font-size: 0.9rem;
+    }
+    
+    .top-container {
+        margin-bottom: 5px;
+    }
+    
+    .logo-container {
+        margin-bottom: 10px;
+    }
+    
+    .progress-bar-container {
+        width: 100px;
+    }
+    
+    .game-info {
+        margin-bottom: 10px;
+    }
+}
+
+/* 添加一个特定的媒体查询来处理超小屏幕 */
+@media (max-height: 640px) {
+    body {
+        padding: 0;
+    }
+    
+    .container {
+        padding: 5px;
+        margin: 0;
+    }
+    
+    .game-board {
+        margin: 5px auto;
+        gap: 5px;
+    }
+    
+    .cell {
+        font-size: 18px;
+    }
+    
+    .main-controls, .special-controls {
+        margin-bottom: 5px;
+        gap: 5px;
+    }
+    
+    .primary-btn, .hint-btn, .special-btn {
+        padding: 8px 5px;
+        font-size: 12px;
+    }
+    
+    .logo {
+        max-height: 50px;
+    }
+    
+    .logo-container {
+        margin-bottom: 5px;
+    }
+    
+    .game-info {
+        margin-bottom: 5px;
+    }
+    
+    .top-container {
+        margin-bottom: 2px;
+    }
+    
+    .theme-label {
+        display: none;
+    }
+}
+
+/* 添加针对小屏幕的额外固定 */
+@media (max-width: 350px) {
+    .cell {
+        font-size: 16px;
+    }
+    
+    .primary-btn, .hint-btn, .special-btn {
+        font-size: 11px;
+        padding: 6px 2px;
+    }
+    
+    .progress-bar-container {
+        width: 80px;
+    }
+    
+    .counter-label {
+        font-size: 0.8rem;
+    }
+    
+    .score-display {
+        font-size: 0.9rem;
+    }
+    
+    .records-display {
+        font-size: 0.7rem;
+    }
+}
+
+/* 添加专门针对超窄高度设备的调整 */
+@media (max-height: 568px) {
+    .container {
+        padding: 2px;
+    }
+    
+    .game-board {
+        gap: 3px;
+    }
+    
+    .logo {
+        max-height: 40px;
+    }
+    
+    .logo-container {
+        margin-bottom: 2px;
+    }
+    
+    .main-controls, .special-controls {
+        gap: 3px;
+        margin-bottom: 3px;
+    }
+    
+    .primary-btn, .hint-btn, .special-btn {
+        padding: 5px 2px;
     }
 }
 
