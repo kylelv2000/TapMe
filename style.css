@@ -12,6 +12,14 @@
     --cell-bg: #e0e0e0;
     --cell-shadow: rgba(0, 0, 0, 0.1);
     --highlight-color: #ffeb3b;
+    
+    /* 新增按钮颜色变量 */
+    --hint-button-bg: #2196f3;
+    --hint-button-hover-bg: #1976d2;
+    --advanced-hint-button-bg: #9c27b0;
+    --advanced-hint-button-hover-bg: #7b1fa2;
+    --shuffle-button-bg: #ff9800;
+    --shuffle-button-hover-bg: #f57c00;
 }
 
 /* 暗色模式 */
@@ -27,6 +35,14 @@
     --cell-bg: #2a2a2a;
     --cell-shadow: rgba(0, 0, 0, 0.3);
     --highlight-color: #ffd600;
+    
+    /* 暗色模式下的按钮颜色 */
+    --hint-button-bg: #1565c0;
+    --hint-button-hover-bg: #0d47a1;
+    --advanced-hint-button-bg: #7b1fa2;
+    --advanced-hint-button-hover-bg: #6a1b9a;
+    --shuffle-button-bg: #ef6c00;
+    --shuffle-button-hover-bg: #e65100;
 }
 
 * {
@@ -54,6 +70,52 @@ body {
     padding: 20px;
     text-align: center;
     transition: background-color 0.3s ease;
+}
+
+/* Logo 样式 */
+.logo-container {
+    margin-bottom: 20px;
+    text-align: center;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.logo {
+    max-width: 240px;
+    max-height: 100px;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+/* 教程按钮样式 */
+.icon-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--counter-color);
+    color: white;
+    border: none;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+    opacity: 0.7;
+}
+
+.icon-btn:hover {
+    opacity: 1;
+    transform: scale(1.05);
 }
 
 h1 {
@@ -314,38 +376,123 @@ input:checked + .slider:before {
 }
 */
 
-button#restart-btn {
-    padding: 10px 20px;
-    background-color: var(--button-bg);
-    color: var(--button-text);
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+/* 替换原有的游戏控制样式 */
+.main-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    gap: 15px;
 }
 
-button#restart-btn:hover {
+.special-controls {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 15px;
+}
+
+/* 基础按钮样式 */
+.primary-btn, .hint-btn, .special-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    color: var(--button-text);
+    flex: 1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.primary-btn:hover, .hint-btn:hover, .special-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.primary-btn:active, .hint-btn:active, .special-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 主要按钮（重新开始）样式 */
+.primary-btn {
+    background-color: var(--button-bg);
+}
+
+.primary-btn:hover {
     background-color: var(--button-hover-bg);
 }
 
-/* 移除调试连通组的样式 */
-/* 
-.cell.debug-group-1 {
-    border: 3px solid red;
-    z-index: 10;
+/* 提示按钮样式 */
+.hint-btn {
+    background-color: var(--hint-button-bg);
 }
 
-.cell.debug-group-2 {
-    border: 3px solid green;
-    z-index: 10;
+.hint-btn:hover {
+    background-color: var(--hint-button-hover-bg);
 }
 
-.cell.debug-group-3 {
-    border: 3px solid blue;
-    z-index: 10;
+/* 特殊按钮样式 */
+.special-btn {
+    font-size: 14px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-*/
+
+/* 高级提示按钮 */
+.hint-special {
+    background-color: var(--advanced-hint-button-bg);
+}
+
+.hint-special:hover {
+    background-color: var(--advanced-hint-button-hover-bg);
+}
+
+/* 打乱按钮 */
+.shuffle-special {
+    background-color: var(--shuffle-button-bg);
+}
+
+.shuffle-special:hover {
+    background-color: var(--shuffle-button-hover-bg);
+}
+
+/* 禁用状态 */
+.special-btn.disabled, .special-btn[disabled] {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.7;
+}
+
+.special-btn.disabled:hover, .special-btn[disabled]:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+    .main-controls, .special-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .primary-btn, .hint-btn, .special-btn {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+    
+    .icon-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 16px;
+    }
+}
 
 /* 亮色模式下1-20的数字颜色 */
 [data-theme="light"] .cell[data-value="1"] { background-color: #a2d2ff; }
@@ -498,6 +645,7 @@ button#restart-btn:hover {
     opacity: 0;
     transition: all 0.3s ease-out;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    text-align: center;
 }
 
 .record-popup.show {
@@ -534,19 +682,22 @@ button#restart-btn:hover {
     opacity: 1;
 }
 
-.game-modal::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    height: 300px;
+.modal-content {
     background-color: var(--container-bg);
     border-radius: 10px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-    z-index: -1;
     padding: 20px;
+    width: 300px;
+    max-width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.game-modal:not(.tutorial-modal)::before {
+    display: none;
 }
 
 .game-modal h2 {
@@ -622,7 +773,7 @@ button#restart-btn:hover {
 
 /* 为游戏结束弹框添加的媒体查询，优化在小屏幕上的显示 */
 @media (max-width: 480px) {
-    .game-modal::before {
+    .game-modal:not(.tutorial-modal)::before {
         width: 90%;
         height: auto;
         aspect-ratio: 1/1.2;
@@ -647,11 +798,7 @@ button#restart-btn:hover {
     margin: 20px 0;
     color: var(--text-color);
     font-size: 1.1rem;
-}
-
-#confirm-modal::before {
-    width: 280px;
-    height: 180px;
+    max-width: 100%;
 }
 
 /* 其他按钮的样式 */
@@ -672,4 +819,306 @@ button#restart-btn:hover {
 
 [data-theme="dark"] .modal-btn:not(.primary-btn):hover {
     background-color: #535353;
+}
+
+/* 教程模态框样式 */
+.tutorial-modal {
+    max-width: 100%;
+    width: 100%;
+    max-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+    gap: 20px;
+}
+
+.tutorial-content {
+    background-color: var(--container-bg);
+    border-radius: 10px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    width: 90%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: left;
+}
+
+.tutorial-section {
+    margin-bottom: 15px;
+}
+
+.tutorial-section h3 {
+    margin-bottom: 10px;
+    color: var(--heading-color);
+}
+
+.tutorial-section ul {
+    padding-left: 20px;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+.tutorial-animation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 15px 0;
+    width: 90%;
+    max-width: 600px;
+    background-color: var(--bg-color);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.demo-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+    gap: 10px;
+    width: 210px;
+    margin-bottom: 15px;
+}
+
+.demo-cell {
+    width: 60px;
+    height: 60px;
+    background-color: var(--cell-bg);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    box-shadow: 0 2px 5px var(--cell-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.demo-explanation {
+    text-align: center;
+    font-size: 1rem;
+    color: var(--counter-color);
+    max-width: 220px;
+    margin-top: 15px;
+    font-weight: 500;
+}
+
+/* 演示动画状态 */
+.demo-clicked {
+    transform: scale(0.9);
+    box-shadow: 0 0 10px 4px var(--highlight-color);
+    background-color: var(--highlight-color);
+    transition: all 0.2s ease;
+}
+
+.demo-match {
+    animation: demoMatch 0.3s ease infinite alternate;
+}
+
+.demo-upgrade {
+    animation: demoUpgrade 0.5s ease;
+}
+
+.demo-vanish {
+    animation: demoVanish 0.5s ease forwards;
+}
+
+@keyframes demoMatch {
+    0% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(1.1);
+        background-color: var(--highlight-color);
+    }
+}
+
+@keyframes demoUpgrade {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+        background-color: var(--highlight-color);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes demoVanish {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+}
+
+/* 为各种数字的单元格设置颜色 */
+[data-theme="light"] .demo-cell[data-value="1"] { background-color: #a2d2ff !important; }
+[data-theme="light"] .demo-cell[data-value="2"] { background-color: #bde0fe !important; }
+[data-theme="light"] .demo-cell[data-value="3"] { background-color: #ffafcc !important; }
+[data-theme="light"] .demo-cell[data-value="4"] { background-color: #ffc8dd !important; }
+
+[data-theme="dark"] .demo-cell[data-value="1"] { background-color: #01295f !important; color: #fff; }
+[data-theme="dark"] .demo-cell[data-value="2"] { background-color: #013a8b !important; color: #fff; }
+[data-theme="dark"] .demo-cell[data-value="3"] { background-color: #5f0140 !important; color: #fff; }
+[data-theme="dark"] .demo-cell[data-value="4"] { background-color: #7a0158 !important; color: #fff; }
+
+/* 移动设备适配 */
+@media (max-width: 480px) {
+    .tutorial-modal {
+        padding: 0 15px;
+    }
+    
+    .tutorial-content {
+        padding: 15px;
+        max-width: 90%;
+    }
+    
+    .demo-board {
+        width: 180px;
+    }
+    
+    .demo-cell {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+}
+
+button.reset-btn {
+    background-color: #ff7043 !important;
+    margin-top: 5px;
+    font-size: 14px !important;
+}
+
+button.reset-btn:hover {
+    background-color: #e64a19 !important;
+}
+
+[data-theme="dark"] button.reset-btn {
+    background-color: #e64a19 !important;
+}
+
+[data-theme="dark"] button.reset-btn:hover {
+    background-color: #bf360c !important;
+}
+
+.tutorial-modal .modal-buttons {
+    margin-top: 20px;
+}
+
+.tutorial-modal .modal-btn {
+    padding: 12px 40px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    background-color: var(--button-bg);
+    color: white;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+.tutorial-modal .modal-btn:hover {
+    transform: scale(1.05);
+    background-color: var(--button-hover-bg);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.tutorial-modal.show {
+    opacity: 1;
+}
+
+.tutorial-modal::before {
+    content: none; /* 移除白色背景，因为我们已经为内容添加了背景 */
+}
+
+/* 提示格子样式 */
+.hint-cell {
+    animation: hint-pulse 1.5s infinite;
+    box-shadow: 0 0 15px var(--highlight-color);
+    z-index: 10;
+    position: relative;
+}
+
+@keyframes hint-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* 没有提示可用的消息样式 */
+.no-hint-message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--container-bg);
+    color: var(--text-color);
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    font-size: 16px;
+    animation: fadeIn 0.3s ease-in;
+    text-align: center;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 确保提示按钮与其他按钮样式一致 */
+button#hint-btn {
+    background-color: #e0e0e0;
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin: 0 5px;
+}
+
+button#hint-btn:hover {
+    background-color: #d0d0d0;
+}
+
+[data-theme="dark"] button#hint-btn {
+    background-color: #444;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] button#hint-btn:hover {
+    background-color: #555;
+}
+
+/* 增强高级提示的格子样式 */
+.hint-cell {
+    animation: hint-pulse 1.5s infinite;
+    box-shadow: 0 0 15px var(--highlight-color);
+    z-index: 10;
+    position: relative;
+}
+
+@keyframes hint-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 } 

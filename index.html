@@ -5,16 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TapMe</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="logo.png" type="image/png">
 </head>
 <body>
     <div class="container">
-        <h1>TapMe</h1>
-        <div class="game-info">
-            <div class="counter-container">
-                <div class="counter-label">剩余点击次数: <span id="clicks-left">5</span></div>
-                <div class="progress-bar-container">
-                    <div class="progress-bar" id="clicks-progress-bar"></div>
-                </div>
+        <div class="top-container">
+            <div class="records-display">
+                <!-- 历史记录将由JavaScript动态生成 -->
             </div>
             <div class="theme-switch">
                 <label class="switch">
@@ -24,10 +21,35 @@
                 <span class="theme-label">暗黑模式</span>
             </div>
         </div>
+        
+        <div class="logo-container">
+            <img src="logo.png" alt="TapMe Logo" class="logo">
+            <button id="tutorial-btn" class="icon-btn" title="查看教程">?</button>
+        </div>
+        
+        <div class="game-info">
+            <div class="counter-container">
+                <div class="counter-label">剩余行动点数: <span id="clicks-left">5</span></div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="clicks-progress-bar"></div>
+                </div>
+            </div>
+            <!-- 分数将由JavaScript动态生成 -->
+        </div>
+        
         <div class="game-board" id="game-board">
             <!-- 棋盘将由JavaScript动态生成 -->
         </div>
-        <button id="restart-btn">重新开始</button>
+        
+        <div class="main-controls">
+            <button id="restart-btn" class="primary-btn">重新开始</button>
+            <button id="hint-btn" class="hint-btn">提示</button>
+        </div>
+        
+        <div class="special-controls">
+            <button id="advanced-hint-btn" class="special-btn hint-special">高级提示(3)</button>
+            <button id="shuffle-btn" class="special-btn shuffle-special">打乱(1)</button>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

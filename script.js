@@ -10,41 +10,34 @@ document.addEventListener('DOMContentLoaded', () => {
         score: 0, // 积分
         maxNumberInGame: 1, // 本局游戏中的最大数字
         isNewNumberRecord: false,
-        isNewScoreRecord: false
+        isNewScoreRecord: false,
+        hasSeenTutorial: false, // 是否已经查看过教程
+        advancedHintsLeft: 0, // 高级提示剩余次数，初始为0，只有在新游戏时才重置
+        shuffleLeft: 0 // 打乱剩余次数，初始为0，只有在新游戏时才重置
     };
 
     const gameBoard = document.getElementById('game-board');
     const clicksLeftElement = document.getElementById('clicks-left');
     const clicksProgressBar = document.getElementById('clicks-progress-bar');
     const restartButton = document.getElementById('restart-btn');
+    const tutorialButton = document.getElementById('tutorial-btn');
+    const hintButton = document.getElementById('hint-btn');
     const themeToggle = document.getElementById('theme-toggle');
     const scoreElement = document.createElement('div');
     scoreElement.classList.add('score-display');
     scoreElement.textContent = '积分: 0';
     document.querySelector('.game-info').appendChild(scoreElement);
 
-    // 创建历史记录显示元素
-    const recordsElement = document.createElement('div');
-    recordsElement.classList.add('records-display');
+    // 获取高级提示按钮和打乱按钮（已在HTML中创建）
+    const advancedHintButton = document.getElementById('advanced-hint-btn');
+    const shuffleButton = document.getElementById('shuffle-btn');
     
-    // 将记录元素添加到TapMe标题之前
-    const container = document.querySelector('.container');
-    const title = document.querySelector('h1');
-    container.insertBefore(recordsElement, title);
+    // 获取或创建历史记录显示元素
+    const recordsElement = document.querySelector('.records-display');
     
-    // 创建包含记录和主题切换的顶部容器
-    const topContainer = document.createElement('div');
-    topContainer.classList.add('top-container');
-    container.insertBefore(topContainer, title);
+    // 获取顶部容器
+    const topContainer = document.querySelector('.top-container');
     
-    // 将记录元素移动到顶部容器
-    topContainer.appendChild(recordsElement);
-    
-    // 将主题切换从当前位置移除并添加到顶部容器
-    const themeSwitch = document.querySelector('.theme-switch');
-    document.querySelector('.game-info').removeChild(themeSwitch);
-    topContainer.appendChild(themeSwitch);
-
     // 初始化主题
     initTheme();
     
@@ -56,8 +49,46 @@ document.addEventListener('DOMContentLoaded', () => {
         // 显示自定义确认弹窗，而不是使用confirm
         showConfirmModal('确定要重新开始游戏吗？', '当前游戏进度将丢失。', () => {
             // 确认后执行
+            // 清除游戏状态
             localStorage.removeItem('tapmeGameState');
+            
+            // 初始化新游戏
             initGame();
+            
+            // 更新显示和保存状态
+            updateButtonsDisplay();
+            saveGameState();
+        });
+    });
+    
+    // 教程按钮事件
+    tutorialButton.addEventListener('click', () => {
+        showTutorial();
+    });
+    
+    // 提示按钮事件
+    hintButton.addEventListener('click', () => {
+        if (gameState.isAnimating || gameState.clicksLeft <= 0) {
+            return;
+        }
+        showHint();
+    });
+    
+    // 高级提示按钮事件
+    advancedHintButton.addEventListener('click', () => {
+        if (gameState.isAnimating || gameState.clicksLeft <= 0 || gameState.advancedHintsLeft <= 0) {
+            return;
+        }
+        showAdvancedHint();
+    });
+    
+    // 打乱按钮事件
+    shuffleButton.addEventListener('click', () => {
+        if (gameState.isAnimating || gameState.shuffleLeft <= 0) {
+            return;
+        }
+        showConfirmModal('确定要打乱棋盘吗？', '这将随机重新排列所有方块。', () => {
+            shuffleBoard();
         });
     });
     
@@ -100,11 +131,17 @@ document.addEventListener('DOMContentLoaded', () => {
             gameState.clicksLeft = savedState.clicksLeft;
             gameState.score = savedState.score || 0; // 兼容旧存档
             gameState.maxNumberInGame = savedState.maxNumberInGame || 1; // 兼容旧存档
+            gameState.hasSeenTutorial = savedState.hasSeenTutorial || false; // 加载教程状态
+            gameState.advancedHintsLeft = savedState.advancedHintsLeft !== undefined ? savedState.advancedHintsLeft : 0; // 兼容旧存档
+            gameState.shuffleLeft = savedState.shuffleLeft !== undefined ? savedState.shuffleLeft : 0; // 兼容旧存档
         } else {
             // 否则初始化新游戏
             gameState.clicksLeft = gameState.maxClicks;
             gameState.score = 0;
             gameState.maxNumberInGame = 1;
+            gameState.hasSeenTutorial = false; // 新游戏，重置教程状态
+            gameState.advancedHintsLeft = 3; // 只有新游戏才重置高级提示次数
+            gameState.shuffleLeft = 1; // 只有新游戏才重置打乱次数
             initializeBoard();
         }
         
@@ -112,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateClicksDisplay();
         updateScoreDisplay();
         updateRecordsDisplay();
+        updateButtonsDisplay();
         gameState.isAnimating = false;
         
         // 创建或更新棋盘DOM
@@ -121,6 +159,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingModal = document.getElementById('game-end-modal');
         if (existingModal) {
             document.body.removeChild(existingModal);
+        }
+        
+        // 检查是否需要显示教程
+        const hasTutorialSeen = localStorage.getItem('tapmeTutorialSeen');
+        if (!hasTutorialSeen && !gameState.hasSeenTutorial) {
+            showTutorial();
         }
     }
     
@@ -159,13 +203,39 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
     
+    // 更新按钮显示
+    function updateButtonsDisplay() {
+        advancedHintButton.textContent = `高级提示(${gameState.advancedHintsLeft})`;
+        shuffleButton.textContent = `打乱(${gameState.shuffleLeft})`;
+        
+        // 根据剩余次数禁用按钮
+        advancedHintButton.disabled = gameState.advancedHintsLeft <= 0;
+        shuffleButton.disabled = gameState.shuffleLeft <= 0;
+        
+        // 视觉上区分禁用状态
+        if (gameState.advancedHintsLeft <= 0) {
+            advancedHintButton.classList.add('disabled');
+        } else {
+            advancedHintButton.classList.remove('disabled');
+        }
+        
+        if (gameState.shuffleLeft <= 0) {
+            shuffleButton.classList.add('disabled');
+        } else {
+            shuffleButton.classList.remove('disabled');
+        }
+    }
+    
     // 保存游戏状态到localStorage
     function saveGameState() {
         const stateToSave = {
             board: gameState.board,
             clicksLeft: gameState.clicksLeft,
             score: gameState.score,
-            maxNumberInGame: gameState.maxNumberInGame
+            maxNumberInGame: gameState.maxNumberInGame,
+            hasSeenTutorial: gameState.hasSeenTutorial,
+            advancedHintsLeft: gameState.advancedHintsLeft,
+            shuffleLeft: gameState.shuffleLeft
         };
         localStorage.setItem('tapmeGameState', JSON.stringify(stateToSave));
     }
@@ -254,14 +324,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // 处理格子点击事件
     function handleCellClick(event) {
         // 当动画正在进行时，阻止用户点击
-        // gameState.isAnimating 在动画开始时设置为 true，动画结束时设置为 false
-        // 这确保了在消除、移动和下落动画期间用户不能点击格子
         if (gameState.isAnimating || gameState.clicksLeft <= 0) return;
         
         const row = parseInt(event.target.dataset.row);
         const col = parseInt(event.target.dataset.col);
         
         if (gameState.board[row][col] === null) return;
+        
+        // 仅清除高亮效果，不影响提示计数
+        document.querySelectorAll('.hint-cell').forEach(el => {
+            el.classList.remove('hint-cell');
+        });
         
         // 平滑增加点击的格子值，避免闪烁
         const oldValue = gameState.board[row][col];
@@ -352,15 +425,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const group = groups[index];
         
         if (group.length >= 3) {
-            // 判断点击的格子是否在连通组中
-            const clickedInGroup = group.some(cell => cell.row === clickedRow && cell.col === clickedCol);
-            
-            // 记录需要清除的格子和目标格子
-            let cellsToClear = [];
+            // 始终使用点击的格子作为目标格子（如果点击的格子在连通组中）
             let targetCell = null;
+            let cellsToClear = [];
+            
+            // 判断点击的格子是否在连通组中
+            const clickedInGroup = clickedRow >= 0 && clickedCol >= 0 && 
+                                 group.some(cell => cell.row === clickedRow && cell.col === clickedCol);
             
             if (clickedInGroup) {
-                // 如果点击的格子在连通组中
+                // 如果点击的格子在连通组中，使用它作为目标
                 targetCell = group.find(cell => cell.row === clickedRow && cell.col === clickedCol);
                 cellsToClear = group.filter(cell => cell.row !== clickedRow || cell.col !== clickedCol);
             } else {
@@ -575,49 +649,56 @@ document.addEventListener('DOMContentLoaded', () => {
         return findAllConnectedGroups().length > 0;
     }
 
-    // 应用重力效果（下落）
+    // 应用重力效果，让空格子上方的数字下落
     function applyGravity() {
-        let hasFalling = false;
         const movingCells = [];
         const newCells = [];
         
-        // 从底部向上处理下落
+        // 从底部向上检查每一列
         for (let col = 0; col < gameState.boardSize; col++) {
-            for (let row = gameState.boardSize - 1; row > 0; row--) {
+            let emptyRow = -1;
+            for (let row = gameState.boardSize - 1; row >= 0; row--) {
                 if (gameState.board[row][col] === null) {
-                    let sourceRow = row - 1;
-                    while (sourceRow >= 0 && gameState.board[sourceRow][col] === null) {
-                        sourceRow--;
+                    // 找到一个空格子
+                    if (emptyRow === -1) {
+                        emptyRow = row;
                     }
+                } else if (emptyRow !== -1) {
+                    // 找到了空格子上方的一个数字，移动它
+                    movingCells.push({
+                        fromRow: row,
+                        fromCol: col,
+                        toRow: emptyRow,
+                        toCol: col,
+                        value: gameState.board[row][col]
+                    });
                     
-                    if (sourceRow >= 0) {
-                        movingCells.push({
-                            fromRow: sourceRow,
-                            fromCol: col,
-                            toRow: row,
-                            toCol: col,
-                            value: gameState.board[sourceRow][col]
-                        });
-                        
-                        gameState.board[row][col] = gameState.board[sourceRow][col];
-                        gameState.board[sourceRow][col] = null;
-                        hasFalling = true;
-                    }
+                    // 更新棋盘
+                    gameState.board[emptyRow][col] = gameState.board[row][col];
+                    gameState.board[row][col] = null;
+                    
+                    // 更新emptyRow，继续向上查找
+                    emptyRow--;
                 }
             }
-        }
-        
-        // 填充顶部空格
-        for (let col = 0; col < gameState.boardSize; col++) {
-            if (gameState.board[0][col] === null) {
-                const newValue = Math.floor(Math.random() * 5) + 1;
-                gameState.board[0][col] = newValue;
+            
+            // 为当前列的顶部空位置生成新数字
+            let emptyCount = 0;
+            for (let row = 0; row < gameState.boardSize; row++) {
+                if (gameState.board[row][col] === null) {
+                    emptyCount++;
+                }
+            }
+            
+            // 为所有顶部空位添加随机数字
+            for (let i = 0; i < emptyCount; i++) {
+                const newValue = Math.floor(Math.random() * 5) + 1; // 1-5的随机数
+                gameState.board[i][col] = newValue;
                 newCells.push({
-                    row: 0,
+                    row: i,
                     col: col,
                     value: newValue
                 });
-                hasFalling = true;
             }
         }
         
@@ -655,24 +736,19 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             newCells.forEach(newCell => {
-                // 移除延迟和闪烁效果，直接更新格子显示
-                const cell = gameState.cellElements[newCell.row][newCell.col];
-                // 不添加new-cell类，避免闪烁
+                // 更新格子显示
                 updateCellDisplay(newCell.row, newCell.col);
             });
             
+            // 检查下落后是否有新的连通组
             setTimeout(() => {
-                if (hasFalling) {
-                    applyGravity();
-                } else {
-                    // 下落完成后检查是否有新的连通组
-                    checkForNewConnectedGroups();
-                }
+                checkForNewConnectedGroups();
             }, 300);
-        } else {
-            // 如果没有格子下落，也要检查是否有新的连通组
-            checkForNewConnectedGroups();
+            
+            return true; // 表示有重力效果发生
         }
+        
+        return false; // 表示没有发生下落
     }
     
     // 下落后检查新连通组
@@ -851,6 +927,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 10);
     }
 
+    // 显示自定义确认弹窗，而不是使用confirm
+    function showConfirmModal(title, message, onConfirm) {
+        // 创建弹框
+        const modal = document.createElement('div');
+        modal.id = 'confirm-modal';
+        modal.className = 'game-modal';
+        
+        // 设置弹框内容
+        const content = `
+            <div class="modal-content">
+                <h2>${title}</h2>
+                <div class="modal-message">${message}</div>
+                <div class="modal-buttons">
+                    <button id="modal-cancel-btn" class="modal-btn">取消</button>
+                    <button id="modal-confirm-btn" class="modal-btn primary-btn">确定</button>
+                </div>
+            </div>
+        `;
+        
+        modal.innerHTML = content;
+        document.body.appendChild(modal);
+        
+        // 添加按钮事件监听
+        setTimeout(() => {
+            document.getElementById('modal-cancel-btn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+            
+            document.getElementById('modal-confirm-btn').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                if (typeof onConfirm === 'function') {
+                    onConfirm();
+                }
+            });
+            
+            // 添加类以触发显示动画
+            modal.classList.add('show');
+        }, 10);
+    }
+
     // 显示游戏结束弹框
     function showGameEndModal() {
         // 创建弹框
@@ -859,7 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.className = 'game-modal';
         
         // 设置弹框内容
-        let message = '<h2>游戏结束</h2>';
+        let message = `<div class="modal-content"><h2>游戏结束</h2>`;
         
         // 添加游戏结果
         message += `<div class="game-results">
@@ -883,7 +999,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 添加按钮
         message += '<div class="modal-buttons">'+
             '<button id="modal-restart-btn" class="modal-btn primary-btn">重新开始</button>'+
-        '</div>';
+        '</div></div>';
         
         modal.innerHTML = message;
         document.body.appendChild(modal);
@@ -892,8 +1008,16 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             document.getElementById('modal-restart-btn').addEventListener('click', () => {
                 document.body.removeChild(modal);
+                
+                // 清除存储
                 localStorage.removeItem('tapmeGameState');
+                
+                // 初始化新游戏
                 initGame();
+                
+                // 更新显示和保存状态
+                updateButtonsDisplay();
+                saveGameState();
             });
             
             // 添加类以触发显示动画
@@ -901,41 +1025,492 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 10);
     }
 
-    // 显示确认弹框
-    function showConfirmModal(title, message, onConfirm) {
-        // 创建弹框
-        const modal = document.createElement('div');
-        modal.id = 'confirm-modal';
-        modal.className = 'game-modal';
+    // 显示游戏教程
+    function showTutorial() {
+        // 标记已经看过教程
+        gameState.hasSeenTutorial = true;
+        localStorage.setItem('tapmeTutorialSeen', 'true');
         
-        // 设置弹框内容
-        const content = `
-            <h2>${title}</h2>
-            <div class="modal-message">${message}</div>
+        // 检查是否已存在教程弹窗
+        let modal = document.getElementById('tutorial-modal');
+        if (modal) {
+            document.body.removeChild(modal);
+        }
+        
+        // 创建教程弹窗
+        modal = document.createElement('div');
+        modal.classList.add('game-modal', 'tutorial-modal');
+        modal.id = 'tutorial-modal';
+        
+        const modalContent = `
+            <div class="tutorial-content">
+                <h2>游戏指南</h2>
+                <div class="tutorial-section">
+                    <h3>游戏规则</h3>
+                    <ul>
+                        <li>点击格子消耗1个行动点数，使数字<strong>+1</strong></li>
+                        <li>当<strong>三个或更多</strong>相同数字相邻时，它们会消除并合并成下一个数字</li>
+                        <li>每次最高有<strong>5个行动点数</strong></li>
+                        <li>每次实现消除可以<strong>恢复1个行动点数</strong></li>
+                        <li>尝试创造出最大的数字并获得最高分</li>
+                        <li><strong>高级提示</strong>可以显示最佳组合方案，每局游戏有3次机会</li>
+                        <li><strong>打乱</strong>可以重新排列所有方块，每局游戏有1次机会</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="tutorial-animation">
+                <div class="demo-board">
+                    <div class="demo-cell" data-value="2">2</div>
+                    <div class="demo-cell" data-value="3">3</div>
+                    <div class="demo-cell" data-value="3">3</div>
+                    <div class="demo-cell" data-value="3">3</div>
+                    <div class="demo-cell" data-value="2">2</div>
+                    <div class="demo-cell" data-value="1">1</div>
+                </div>
+                <div class="demo-explanation">
+                    三个相同数字会合并为下一个级别
+                </div>
+            </div>
             <div class="modal-buttons">
-                <button id="modal-cancel-btn" class="modal-btn">取消</button>
-                <button id="modal-confirm-btn" class="modal-btn primary-btn">确定</button>
+                <button class="modal-btn primary-btn" id="tutorial-skip-btn">关闭</button>
             </div>
         `;
         
-        modal.innerHTML = content;
+        modal.innerHTML = modalContent;
         document.body.appendChild(modal);
         
-        // 添加按钮事件监听
+        // 添加动画效果
         setTimeout(() => {
-            document.getElementById('modal-cancel-btn').addEventListener('click', () => {
-                document.body.removeChild(modal);
-            });
-            
-            document.getElementById('modal-confirm-btn').addEventListener('click', () => {
-                document.body.removeChild(modal);
-                if (typeof onConfirm === 'function') {
-                    onConfirm();
-                }
-            });
-            
-            // 添加类以触发显示动画
             modal.classList.add('show');
-        }, 10);
+            
+            // 开始演示动画
+            setTimeout(() => {
+                startTutorialDemo();
+            }, 500);
+        }, 100);
+        
+        // 绑定按钮点击事件
+        document.getElementById('tutorial-skip-btn').addEventListener('click', () => {
+            document.body.removeChild(modal);
+        });
+    }
+    
+    // 教程动画演示
+    function startTutorialDemo() {
+        // 获取演示区域中的单元格
+        const demoCells = document.querySelectorAll('.demo-cell');
+        if (!demoCells.length) return;
+        
+        // 模拟点击左上角的单元格（值为2）
+        setTimeout(() => {
+            const targetCell = demoCells[0]; // 点击左上角值为2的单元格
+            
+            // 清除所有可能的动画类
+            demoCells.forEach(cell => {
+                cell.className = 'demo-cell';
+                const value = cell.getAttribute('data-value');
+                cell.textContent = value;
+            });
+            
+            // 先高亮显示被点击的单元格
+            targetCell.classList.add('demo-clicked');
+            
+            // 显示点击效果后，延迟一段时间再更新值
+            setTimeout(() => {
+                // 更新值
+                const currentValue = parseInt(targetCell.getAttribute('data-value'));
+                const newValue = currentValue + 1;
+                targetCell.setAttribute('data-value', newValue);
+                targetCell.textContent = newValue;
+                
+                // 消除高亮
+                setTimeout(() => {
+                    targetCell.classList.remove('demo-clicked');
+                    
+                    // 检查是否有三个相同的值
+                    const matchValue = 3;
+                    const matchingCells = Array.from(demoCells).filter(cell => 
+                        parseInt(cell.getAttribute('data-value')) === matchValue
+                    );
+                    
+                    if (matchingCells.length >= 3) {
+                        // 高亮显示合并的单元格
+                        matchingCells.forEach(cell => {
+                            cell.classList.add('demo-match');
+                        });
+                        
+                        // 等待一会后合并
+                        setTimeout(() => {
+                            // 移除匹配的单元格，保留点击的单元格作为目标
+                            matchingCells.forEach(cell => {
+                                if (cell !== targetCell) {
+                                    cell.classList.add('demo-vanish');
+                                }
+                            });
+                            
+                            // 目标单元格升级
+                            targetCell.classList.add('demo-upgrade');
+                            targetCell.setAttribute('data-value', matchValue + 1);
+                            targetCell.textContent = matchValue + 1;
+                            
+                            // 更新演示文本
+                            document.querySelector('.demo-explanation').textContent = 
+                                "成功合并！获得一个更高级的数字，并恢复1点行动力";
+                                
+                            // 重置演示（如果需要重复演示）
+                            setTimeout(() => {
+                                // 重置演示区域供下一次演示
+                                restartTutorialDemo();
+                            }, 3000);
+                        }, 1000);
+                    }
+                }, 500);
+            }, 300); // 延迟变化值，让点击效果更明显
+        }, 1000);
+    }
+    
+    // 重置教程演示
+    function restartTutorialDemo() {
+        // 获取演示区域中的单元格
+        const demoCells = document.querySelectorAll('.demo-cell');
+        if (!demoCells.length) return;
+        
+        // 重置所有单元格
+        demoCells.forEach((cell, index) => {
+            // 清除所有类，只保留基本类
+            cell.className = 'demo-cell';
+            
+            // 重置为初始值
+            const initialValues = [2, 3, 3, 3, 2, 1]; // 初始值
+            cell.setAttribute('data-value', initialValues[index]);
+            cell.textContent = initialValues[index];
+        });
+        
+        // 重置说明文本
+        document.querySelector('.demo-explanation').textContent = 
+            "三个相同数字会合并为下一个级别";
+            
+        // 短暂延迟后重新开始演示
+        setTimeout(() => {
+            startTutorialDemo();
+        }, 500);
+    }
+
+    // 找到并突出显示连通组
+    function findAndHighlightConnectedGroups() {
+        const connectedGroups = findAllConnectedGroups();
+        let hasConnected = false;
+        
+        // 移除所有之前的new-connected类
+        document.querySelectorAll('.new-connected').forEach(el => {
+            el.classList.remove('new-connected');
+        });
+        
+        // 为连通组添加高亮效果
+        connectedGroups.forEach(group => {
+            if (group.length >= 3) {
+                hasConnected = true;
+                group.forEach(cell => {
+                    const cellElement = gameState.cellElements[cell.row][cell.col];
+                    cellElement.classList.add('new-connected');
+                });
+            }
+        });
+        
+        return hasConnected;
+    }
+
+    // 添加提示功能：查找点击一次后能形成连通组的格子
+    function showHint() {
+        // 如果已经使用过提示，先清除之前的提示高亮
+        clearHints();
+        
+        // 寻找能形成连通组的格子
+        const hintCell = findHintCell();
+        
+        if (hintCell) {
+            // 找到了可以提示的格子
+            const cellElement = gameState.cellElements[hintCell.row][hintCell.col];
+            cellElement.classList.add('hint-cell');
+            
+            // 5秒后自动清除提示
+            setTimeout(() => {
+                clearHints();
+            }, 5000);
+        } else {
+            // 没找到可提示的格子，显示一个短暂的提示消息
+            const noHintMsg = document.createElement('div');
+            noHintMsg.classList.add('no-hint-message');
+            noHintMsg.textContent = "没有找到可以消除的格子";
+            document.body.appendChild(noHintMsg);
+            
+            setTimeout(() => {
+                document.body.removeChild(noHintMsg);
+            }, 2000);
+        }
+    }
+    
+    // 清除所有提示高亮
+    function clearHints() {
+        document.querySelectorAll('.hint-cell').forEach(el => {
+            el.classList.remove('hint-cell');
+        });
+    }
+    
+    // 寻找点击一次后能形成连通组的格子
+    function findHintCell() {
+        // 遍历所有格子
+        for (let i = 0; i < gameState.boardSize; i++) {
+            for (let j = 0; j < gameState.boardSize; j++) {
+                if (gameState.board[i][j] === null) continue;
+                
+                // 临时增加这个格子的值
+                const originalValue = gameState.board[i][j];
+                gameState.board[i][j]++;
+                
+                // 检查是否形成连通组
+                const groups = findAllConnectedGroups();
+                
+                // 还原格子值
+                gameState.board[i][j] = originalValue;
+                
+                // 如果有连通组形成，返回这个格子
+                if (groups.length > 0 && groups.some(group => group.length >= 3)) {
+                    return { row: i, col: j };
+                }
+            }
+        }
+        
+        // 没找到能形成连通组的格子
+        return null;
+    }
+
+    // 高级提示功能
+    function showAdvancedHint() {
+        // 如果已经使用过提示，先清除之前的提示高亮
+        clearHints();
+        
+        // 寻找最佳连通方案
+        const bestHint = findBestHintSequence();
+        
+        if (bestHint && bestHint.cells.length > 0) {
+            // 找到了可以提示的连通方案
+            bestHint.cells.forEach(cell => {
+                const cellElement = gameState.cellElements[cell.row][cell.col];
+                cellElement.classList.add('hint-cell');
+            });
+            
+            // 显示提示消息
+            const hintMsg = document.createElement('div');
+            hintMsg.classList.add('no-hint-message');
+            hintMsg.textContent = `推荐连通${bestHint.value}，需点击${bestHint.clicks}次`;
+            document.body.appendChild(hintMsg);
+            
+            // 减少高级提示次数
+            gameState.advancedHintsLeft--;
+            updateButtonsDisplay();
+            saveGameState();
+            
+            // 5秒后自动清除提示
+            setTimeout(() => {
+                clearHints();
+                document.body.removeChild(hintMsg);
+            }, 5000);
+        } else {
+            // 没找到可提示的方案，显示一个短暂的提示消息
+            const noHintMsg = document.createElement('div');
+            noHintMsg.classList.add('no-hint-message');
+            noHintMsg.textContent = "没有找到可行的连通方案";
+            document.body.appendChild(noHintMsg);
+            
+            setTimeout(() => {
+                document.body.removeChild(noHintMsg);
+            }, 2000);
+        }
+    }
+    
+    // 寻找最佳连通方案
+    function findBestHintSequence() {
+        // 最佳连通方案
+        let bestHint = null;
+        let bestScore = -1;
+        
+        // 尝试遍历所有格子组合，寻找最好的连通方案
+        for (let value = 1; value <= 10; value++) {
+            // 找出所有当前值的格子
+            const sameCells = [];
+            for (let i = 0; i < gameState.boardSize; i++) {
+                for (let j = 0; j < gameState.boardSize; j++) {
+                    if (gameState.board[i][j] === value) {
+                        sameCells.push({row: i, col: j});
+                    }
+                }
+            }
+            
+            // 至少需要3个相同值的格子才可能形成连通组
+            if (sameCells.length < 3) continue;
+            
+            // 尝试找出哪些格子需要点击才能形成连通组
+            const potentialHints = findPotentialConnections(sameCells, value);
+            
+            for (const hint of potentialHints) {
+                // 计算这个提示的分数（基于需要点击的次数和连通组的大小）
+                const score = (hint.group.length * 10) - (hint.clicksNeeded * 5);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestHint = {
+                        cells: hint.group,
+                        clicks: hint.clicksNeeded,
+                        value: value
+                    };
+                }
+            }
+        }
+        
+        return bestHint;
+    }
+    
+    // 找出潜在的连接方案
+    function findPotentialConnections(cells, value) {
+        const results = [];
+        
+        // 创建一个临时板复制当前状态
+        const tempBoard = [];
+        for (let i = 0; i < gameState.boardSize; i++) {
+            tempBoard[i] = [...gameState.board[i]];
+        }
+        
+        // 尝试对每个格子增加不同的值，看是否能形成连通组
+        for (let clicksNeeded = 1; clicksNeeded <= 3; clicksNeeded++) {  // 最多尝试3次点击
+            for (const cell of cells) {
+                // 临时增加这个格子的值
+                tempBoard[cell.row][cell.col] = value + clicksNeeded;
+                
+                // 检查是否能形成连通组
+                const connectedGroup = findConnectedGroup(tempBoard, cell.row, cell.col);
+                
+                if (connectedGroup && connectedGroup.length >= 3) {
+                    results.push({
+                        group: connectedGroup.map(c => ({row: c.row, col: c.col})),
+                        clicksNeeded: clicksNeeded
+                    });
+                }
+                
+                // 还原格子值
+                tempBoard[cell.row][cell.col] = value;
+            }
+        }
+        
+        return results;
+    }
+    
+    // 在临时板上查找指定位置的连通组
+    function findConnectedGroup(board, row, col) {
+        const value = board[row][col];
+        if (value === null) return null;
+        
+        const visited = Array(gameState.boardSize).fill().map(() => Array(gameState.boardSize).fill(false));
+        const group = [];
+        
+        // 使用广度优先搜索找出所有连通的相同值格子
+        const queue = [{row, col}];
+        visited[row][col] = true;
+        
+        while (queue.length > 0) {
+            const cell = queue.shift();
+            group.push(cell);
+            
+            // 检查四个方向
+            const directions = [
+                {row: cell.row - 1, col: cell.col}, // 上
+                {row: cell.row + 1, col: cell.col}, // 下
+                {row: cell.row, col: cell.col - 1}, // 左
+                {row: cell.row, col: cell.col + 1}  // 右
+            ];
+            
+            for (const dir of directions) {
+                const newRow = dir.row;
+                const newCol = dir.col;
+                
+                if (newRow >= 0 && newRow < gameState.boardSize && 
+                    newCol >= 0 && newCol < gameState.boardSize && 
+                    !visited[newRow][newCol] && 
+                    board[newRow][newCol] === value) {
+                    
+                    visited[newRow][newCol] = true;
+                    queue.push({row: newRow, col: newCol});
+                }
+            }
+        }
+        
+        return group.length >= 3 ? group : null;
+    }
+    
+    // 打乱棋盘
+    function shuffleBoard() {
+        if (gameState.isAnimating) return;
+        
+        gameState.isAnimating = true;
+        
+        // 收集所有非空格子的值
+        const allValues = [];
+        for (let i = 0; i < gameState.boardSize; i++) {
+            for (let j = 0; j < gameState.boardSize; j++) {
+                if (gameState.board[i][j] !== null) {
+                    allValues.push(gameState.board[i][j]);
+                }
+            }
+        }
+        
+        // 打乱数组
+        for (let i = allValues.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allValues[i], allValues[j]] = [allValues[j], allValues[i]];
+        }
+        
+        // 添加动画效果：先让所有格子消失
+        const cells = document.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.classList.add('vanish');
+        });
+        
+        // 短暂延迟后重新分配值并显示
+        setTimeout(() => {
+            let valueIndex = 0;
+            for (let i = 0; i < gameState.boardSize; i++) {
+                for (let j = 0; j < gameState.boardSize; j++) {
+                    if (gameState.board[i][j] !== null) {
+                        gameState.board[i][j] = allValues[valueIndex++];
+                    }
+                }
+            }
+            
+            // 更新显示
+            cells.forEach(cell => {
+                cell.classList.remove('vanish');
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                updateCellDisplay(row, col);
+            });
+            
+            // 添加出现动画
+            cells.forEach(cell => {
+                cell.classList.add('new-cell');
+                setTimeout(() => cell.classList.remove('new-cell'), 300);
+            });
+            
+            // 减少打乱次数
+            gameState.shuffleLeft--;
+            updateButtonsDisplay();
+            
+            // 保存游戏状态
+            saveGameState();
+            
+            // 检查是否有新的连通组
+            setTimeout(() => {
+                gameState.isAnimating = false;
+                checkForNewConnectedGroups();
+            }, 300);
+        }, 300);
     }
 }); 
