@@ -721,6 +721,16 @@ input:checked + .slider:before {
     .records-display {
         font-size: 0.7rem;
     }
+    
+    .modal-buttons {
+        gap: 5px;
+    }
+    
+    .modal-btn {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+        border-radius: 4px;
+    }
 }
 
 /* 添加专门针对超窄高度设备的调整 */
@@ -1009,6 +1019,7 @@ input:checked + .slider:before {
     display: flex;
     justify-content: center;
     margin-top: 25px;
+    flex-wrap: nowrap;
 }
 
 .modal-btn {
@@ -1019,6 +1030,7 @@ input:checked + .slider:before {
     cursor: pointer;
     transition: all 0.2s ease;
     margin: 0 10px;
+    white-space: nowrap;
 }
 
 .primary-btn {
@@ -1496,5 +1508,22 @@ button#hint-btn:hover {
     .no-hint-message {
         font-size: 14px;
         padding: 12px 15px;
+    }
+}
+
+/* 特别为确认弹框按钮添加移动设备适配 */
+@media (max-width: 480px) {
+    .modal-buttons {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    
+    .modal-btn {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+        margin: 0;
+        flex: 1;
+        min-width: auto;
     }
 } 
