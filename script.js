@@ -95,6 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 主题切换事件
     themeToggle.addEventListener('change', toggleTheme);
 
+    // 添加点击队列以处理连续点击
+    const clickQueue = [];
+    let isProcessingClick = false;
+
     // 初始化主题
     function initTheme() {
         // 检查本地存储中是否有保存的主题偏好
@@ -323,13 +327,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 处理格子点击事件
     function handleCellClick(event) {
-        // 当动画正在进行时，阻止用户点击
-        if (gameState.isAnimating || gameState.clicksLeft <= 0) return;
+        // 当剩余点击次数为0时，直接阻止用户点击
+        if (gameState.clicksLeft <= 0) return;
         
         const row = parseInt(event.target.dataset.row);
         const col = parseInt(event.target.dataset.col);
         
         if (gameState.board[row][col] === null) return;
+        
+        // 将点击添加到队列
+        clickQueue.push({row, col});
+        
+        // 如果当前没有处理点击，启动处理
+        if (!isProcessingClick) {
+            processNextClick();
+        }
+    }
+    
+    // 处理队列中的下一个点击
+    function processNextClick() {
+        if (clickQueue.length === 0) {
+            isProcessingClick = false;
+            return;
+        }
+        
+        isProcessingClick = true;
+        const {row, col} = clickQueue.shift();
+        
+        // 在动画进行中时，将点击暂时保存并稍后处理
+        if (gameState.isAnimating) {
+            setTimeout(() => processNextClick(), 100);
+            return;
+        }
+        
+        // 再次检查点击的格子是否有效（可能已被动画消除）
+        if (gameState.board[row][col] === null) {
+            // 如果格子已无效，直接处理下一个点击
+            processNextClick();
+            return;
+        }
         
         // 仅清除高亮效果，不影响提示计数
         document.querySelectorAll('.hint-cell').forEach(el => {
@@ -391,11 +427,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             console.log('连锁反应增加了点击次数，游戏继续！');
                             // 保存游戏状态
                             saveGameState();
+                            
+                            // 处理下一个点击（如果有）
+                            processNextClick();
                         }
                     }
                 }
                 // 开始检查
                 setTimeout(checkAnimationStatus, 300);
+            } else {
+                // 如果剩余点击次数大于0，处理下一个点击
+                setTimeout(() => {
+                    processNextClick();
+                }, 100);
             }
         }, 150);
     }
@@ -409,6 +453,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // 依次处理连通组，而不是同时处理
             processNextGroup(connectedGroups, 0, clickedRow, clickedCol);
+        } else {
+            // 如果没有连通组，确保重置isAnimating状态
+            gameState.isAnimating = false;
+            // 保存游戏状态
+            saveGameState();
         }
     }
     
@@ -780,6 +829,11 @@ document.addEventListener('DOMContentLoaded', () => {
             gameState.isAnimating = false;
             // 保存最终状态
             saveGameState();
+            
+            // 检查是否有等待处理的点击
+            if (isProcessingClick && clickQueue.length > 0) {
+                setTimeout(processNextClick, 100);
+            }
         }
     }
 
